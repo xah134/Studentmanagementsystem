@@ -2,6 +2,7 @@ import { Geist, Geist_Mono, Inter, Roboto } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 import { cn } from "@/lib/utils";
 
 const robotoHeading = Roboto({subsets:['latin'],variable:'--font-heading'});
@@ -25,7 +26,10 @@ export default function RootLayout({
       className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, robotoHeading.variable)}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
