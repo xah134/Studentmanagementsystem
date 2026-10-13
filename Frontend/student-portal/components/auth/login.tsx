@@ -7,10 +7,10 @@ import { Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/Button/button"
+import { Card, CardContent } from "@/components/ui/Card/card"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/Field/field"
+import { Input } from "@/components/ui/Input/input"
 
 const apiUrl =
   process.env.NEXT_PUBLIC_STUDENT_PORTAL_API_URL || "http://localhost:5156/api"
@@ -77,7 +77,7 @@ export function LoginForm({
       }
       toast.success("Signed in")
       if (payload.data?.role === "SYSTEM_ADMIN") {
-        router.push("/sysadmin")
+        router.push("/dashboard")
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not sign in")
