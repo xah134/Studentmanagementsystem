@@ -1,40 +1,27 @@
-"use client"
+import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card/card';
+import { LucideIcon } from 'lucide-react';
 
-import type { LucideIcon } from "lucide-react"
+interface KpiWidgetProps {
+  label: string;
+  value: number | null;
+  description?: string;
+  icon?: LucideIcon;
+}
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/Card/card"
+export function KpiWidget({ label, value, description, icon: Icon }: KpiWidgetProps) {
+  const formattedValue = value !== null ? value.toLocaleString() : '—';
 
-export function KpiWidget({
-  label,
-  value,
-  description,
-  icon: Icon,
-}: {
-  label: string
-  value: number | null
-  description?: string
-  icon?: LucideIcon
-}) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {Icon ? <Icon className="size-4" /> : null}
-          {label}
-        </CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{label}</CardTitle>
+        {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-semibold tracking-tight">
-          {value === null ? "—" : value.toLocaleString()}
-        </p>
+        <div className="text-2xl font-bold">{formattedValue}</div>
+        {description && <CardDescription className="text-xs text-muted-foreground mt-1">{description}</CardDescription>}
       </CardContent>
     </Card>
-  )
+  );
 }
