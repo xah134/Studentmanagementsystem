@@ -3,34 +3,13 @@ import prisma from "../config/prisma.js";
 class AuthController {
     static async signUp(req, res) {
         try {
-            const {
-                email,
-                firstName,
-                lastName,
-                idNumber,
-                passport,
-                phone,
-                address,
-                city,
-                state,
-                zip,
-                country,
-                password,
-                role,
-            } = req.body;
+            const { email, firstName, lastName, phone, password, role } = req.body;
             const profile = {
                 email,
                 password,
-                firstName,
-                lastName,
-                idNumber,
-                passport,
+                first_name: firstName,
+                last_name: lastName,
                 phone,
-                address,
-                city,
-                state,
-                zip,
-                country,
                 role,
             };
             const user = await AuthService.SignUp(profile);

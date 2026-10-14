@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
 import { cn } from "cn"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/Button/button"
+import { Card, CardContent } from "@/components/ui/Card/card"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/Field/field"
+import { Input } from "@/components/ui/Input/input"
 
 export function SignUpForm({ className, ...props }) {
   const router = useRouter()
