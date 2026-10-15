@@ -70,10 +70,12 @@ model sites {
   updated_at     DateTime @updatedAt @default(now())
   institution_id String
 
-  institution institutions @relation(fields: [institution_id], references: [id])
-  users       users[]
-  students    students[]
-  lecturers   lecturers[]
+  institution     institutions      @relation(fields: [institution_id], references: [id])
+  users           users[]
+  students        students[]
+  lecturers       lecturers[]
+  site_whatsapp   site_whatsapp?
+  support_tickets support_tickets[]
 
   @@unique([institution_id, name])
   @@map("sites")
@@ -229,4 +231,60 @@ enum VerificationStatus {
   PENDING
   VERIFIED
   REJECTED
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  DONE
+}
+
+enum SupportMessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+model site_whatsapp {
+  id           String   @id @default(uuid())
+  site_id      String   @unique
+  session_name String   @unique
+  is_deleted   Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt @default(now())
+
+  site sites @relation(fields: [site_id], references: [id])
+
+  @@map("site_whatsapp")
+}
+
+model support_tickets {
+  id         String              @id @default(uuid())
+  site_id    String
+  chat_id    String
+  status     SupportTicketStatus @default(OPEN)
+  preview    String?
+  opened_at  DateTime?
+  created_at DateTime            @default(now())
+  updated_at DateTime            @updatedAt @default(now())
+
+  site     sites              @relation(fields: [site_id], references: [id])
+  messages support_messages[]
+
+  @@index([site_id, chat_id])
+  @@map("support_tickets")
+}
+
+model support_messages {
+  id              String                  @id @default(uuid())
+  ticket_id       String
+  direction       SupportMessageDirection
+  body            String
+  waha_message_id String?
+  created_at      DateTime                @default(now())
+
+  ticket support_tickets @relation(fields: [ticket_id], references: [id])
+
+  @@index([ticket_id])
+  @@map("support_messages")
 }
