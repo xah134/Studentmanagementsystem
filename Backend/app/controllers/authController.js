@@ -29,7 +29,11 @@ class AuthController {
                 return res.status(400).json({ message: user.error });
             }
             const userData = await prisma.users.findUnique({ where: { email } });
-            return res.status(200).json({ message: "User signed in", data: userData });
+            return res.status(200).json({
+                message: "User signed in",
+                data: userData,
+                accessToken: user.data?.session?.access_token || null,
+            });
         } catch (error) {
             return res.status(500).json({ message: error.message });
         }
