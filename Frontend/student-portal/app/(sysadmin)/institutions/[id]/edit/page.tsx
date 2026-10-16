@@ -8,7 +8,7 @@ export default async function EditInstitutionPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const institution = getInstitution(id)
+  const institution = await getInstitution(id)
 
   if (!institution) {
     notFound()
