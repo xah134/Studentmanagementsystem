@@ -13,8 +13,8 @@ import {
 } from "@/components/data-table"
 
 import {
+  fetchInstitutions,
   institutionTypeLabels,
-  institutions as initialInstitutions,
   type Institution,
 } from "./institutions"
 
@@ -43,10 +43,12 @@ const columns: ColumnDef<DataTableFeatures, Institution, any>[] = [
     ),
     filterFn: "includesString",
   }),
-  columnHelper.accessor("city", {
+  columnHelper.accessor((institution) => institution.city ?? "", {
+    id: "city",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="City" />
     ),
+    cell: ({ row }) => row.original.city ?? "",
     filterFn: "includesString",
   }),
   columnHelper.accessor("isActive", {
@@ -65,7 +67,31 @@ const columns: ColumnDef<DataTableFeatures, Institution, any>[] = [
 ]
 
 export function InstitutionsTable() {
-  const [rows, setRows] = React.useState(initialInstitutions)
+  const [rows, setRows] = React.useState<Institution[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+
+    fetchInstitutions(controller.signal)
+      .then((items) => {
+        setRows(items)
+        setError(null)
+      })
+      .catch((err: unknown) => {
+        if (controller.signal.aborted) return
+        setRows([])
+        setError(
+          err instanceof Error ? err.message : "Failed to load institutions"
+        )
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+
+    return () => controller.abort()
+  }, [])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Institution>>(
     () => ({
@@ -91,12 +117,18 @@ export function InstitutionsTable() {
   )
 
   return (
-    <DataTable
-      columns={columns}
-      data={rows}
-      filterColumn="name"
-      filterPlaceholder="Filter institutions..."
-      rowActions={rowActions}
-    />
+    <div className="flex flex-col gap-4">
+      {loading ? (
+        <p className="text-sm text-muted-foreground">Loading institutions...</p>
+      ) : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      <DataTable
+        columns={columns}
+        data={rows}
+        filterColumn="name"
+        filterPlaceholder="Filter institutions..."
+        rowActions={rowActions}
+      />
+    </div>
   )
 }

@@ -8,7 +8,7 @@ export default async function InstitutionPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const institution = getInstitution(id)
+  const institution = await getInstitution(id)
 
   if (!institution) {
     notFound()
@@ -18,7 +18,9 @@ export default async function InstitutionPage({
     <div className="flex flex-col gap-2">
       <h1 className="text-3xl font-bold tracking-tight">{institution.name}</h1>
       <p className="text-muted-foreground">
-        {institutionTypeLabels[institution.institutionType]} · {institution.city}
+        {[institutionTypeLabels[institution.institutionType], institution.city]
+          .filter(Boolean)
+          .join(" · ")}
       </p>
       <p>{institution.email}</p>
     </div>
