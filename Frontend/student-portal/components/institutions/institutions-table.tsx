@@ -66,7 +66,7 @@ const columns: ColumnDef<DataTableFeatures, Institution, any>[] = [
   }),
 ]
 
-export function InstitutionsTable() {
+export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [rows, setRows] = React.useState<Institution[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -91,7 +91,7 @@ export function InstitutionsTable() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [refreshKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Institution>>(
     () => ({

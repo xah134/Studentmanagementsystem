@@ -22,4 +22,16 @@ export class UserController {
       return res.status(500).json({ message: err.message || 'Internal server error' });
     }
   }
+
+  static async create(req, res) {
+    try {
+      const result = await UserService.create(req.body || {});
+      if (result.error) {
+        return res.status(result.status || 400).json({ message: result.error });
+      }
+      return res.status(201).json({ message: 'User created', data: result.data });
+    } catch (err) {
+      return res.status(500).json({ message: err.message || 'Internal server error' });
+    }
+  }
 }
