@@ -104,6 +104,7 @@ export function CreateInstitutionDialog({ onCreated }: { onCreated: () => void }
               <FieldLabel htmlFor="create-institution-name">Name</FieldLabel>
               <Input
                 id="create-institution-name"
+                placeholder="Northfield University"
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
                 required
@@ -114,6 +115,7 @@ export function CreateInstitutionDialog({ onCreated }: { onCreated: () => void }
               <Input
                 id="create-institution-email"
                 type="email"
+                placeholder="office@northfield.edu"
                 value={form.email}
                 onChange={(event) => update("email", event.target.value)}
                 required
@@ -140,6 +142,7 @@ export function CreateInstitutionDialog({ onCreated }: { onCreated: () => void }
               <FieldLabel htmlFor="create-institution-phone">Phone</FieldLabel>
               <Input
                 id="create-institution-phone"
+                placeholder="+27 21 000 0000"
                 value={form.phone}
                 onChange={(event) => update("phone", event.target.value)}
               />
@@ -148,6 +151,7 @@ export function CreateInstitutionDialog({ onCreated }: { onCreated: () => void }
               <FieldLabel htmlFor="create-institution-city">City</FieldLabel>
               <Input
                 id="create-institution-city"
+                placeholder="Cape Town"
                 value={form.city}
                 onChange={(event) => update("city", event.target.value)}
               />
@@ -156,6 +160,7 @@ export function CreateInstitutionDialog({ onCreated }: { onCreated: () => void }
               <FieldLabel htmlFor="create-institution-country">Country</FieldLabel>
               <Input
                 id="create-institution-country"
+                placeholder="South Africa"
                 value={form.country}
                 onChange={(event) => update("country", event.target.value)}
               />
@@ -164,6 +169,7 @@ export function CreateInstitutionDialog({ onCreated }: { onCreated: () => void }
               <FieldLabel htmlFor="create-institution-website">Website</FieldLabel>
               <Input
                 id="create-institution-website"
+                placeholder="https://northfield.edu"
                 value={form.website}
                 onChange={(event) => update("website", event.target.value)}
               />
