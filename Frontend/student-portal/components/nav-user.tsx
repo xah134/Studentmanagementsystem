@@ -1,11 +1,13 @@
 "use client"
 
+import Link from "next/link"
 import {
   BadgeCheck,
   Bell,
   ChevronsUpDown,
   CreditCard,
   LogOut,
+  Settings,
   Sparkles,
 } from "lucide-react"
 
@@ -102,6 +104,10 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuItem render={<Link href="/settings" />}>
+                <Settings />
+                Settings
+              </DropdownMenuItem>
               <DropdownMenuItem>
                 <BadgeCheck />
                 Account

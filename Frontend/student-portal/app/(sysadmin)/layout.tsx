@@ -1,6 +1,6 @@
 "use client"
 
-import { Building2, LayoutDashboard, Users } from "lucide-react"
+import { Building2, LayoutDashboard } from "lucide-react"
 
 import { AppSidebar } from "@/components/app.sidebar"
 import {
@@ -17,10 +17,7 @@ const sysadminNav = [
   },
   {
     label: "Management",
-    items: [
-      { title: "Institutions", url: "/institutions", icon: Building2 },
-      { title: "Users", url: "/users", icon: Users },
-    ],
+    items: [{ title: "Institutions", url: "/institutions", icon: Building2 }],
   },
 ]
 

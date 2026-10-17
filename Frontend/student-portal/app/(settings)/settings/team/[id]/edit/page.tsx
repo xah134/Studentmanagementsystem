@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 
 import { getUser, getUserName } from "@/components/users/users"
 
-export default async function EditUserPage({
+export default async function EditTeamMemberPage({
   params,
 }: {
   params: Promise<{ id: string }>

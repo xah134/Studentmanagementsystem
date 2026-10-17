@@ -63,7 +63,7 @@ const columns: ColumnDef<DataTableFeatures, User, any>[] = [
   }),
 ]
 
-export function UsersTable() {
+export function UsersTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [rows, setRows] = React.useState<User[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -86,13 +86,13 @@ export function UsersTable() {
       })
 
     return () => controller.abort()
-  }, [])
+  }, [refreshKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<User>>(
     () => ({
       getLabel: (user) => getUserName(user) || user.email,
-      viewHref: (user) => `/users/${user.id}`,
-      editHref: (user) => `/users/${user.id}/edit`,
+      viewHref: (user) => `/settings/team/${user.id}`,
+      editHref: (user) => `/settings/team/${user.id}/edit`,
       menu: [
         {
           label: "Mark as inactive",
