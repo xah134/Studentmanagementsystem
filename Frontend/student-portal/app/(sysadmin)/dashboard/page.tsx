@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Building2 } from "lucide-react"
 
 import { KpiWidget } from "@/components/kpi/kpi-widget"
+import { PageTitle } from "@/components/page-title"
 
 export default function DashboardPage() {
   const [value, setValue] = useState<number | null>(null)
@@ -36,8 +37,8 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+    <div className="space-y-6">
+      <PageTitle>Dashboard</PageTitle>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <KpiWidget
           label="Institutions"

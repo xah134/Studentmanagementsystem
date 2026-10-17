@@ -22,6 +22,7 @@ export type DataTableMenuAction<TData> = {
 
 export type DataTableRowActionsConfig<TData> = {
   getLabel?: (row: TData) => string
+  onView?: (row: TData) => void
   viewHref?: (row: TData) => string
   editHref?: (row: TData) => string
   menu?: DataTableMenuAction<TData>[]
@@ -57,7 +58,16 @@ function DataTableRowActions<TData>({
 
   return (
     <div className="flex items-center justify-end gap-1">
-      {viewHref ? (
+      {actions.onView ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`View ${label}`}
+          onClick={() => actions.onView?.(row)}
+        >
+          <Eye />
+        </Button>
+      ) : viewHref ? (
         <Button
           variant="ghost"
           size="icon-sm"

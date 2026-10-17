@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { getInstitution, institutionTypeLabels } from "@/components/institutions/institutions"
+import { PageTitle } from "@/components/page-title"
 
 export default async function InstitutionPage({
   params,
@@ -16,7 +17,7 @@ export default async function InstitutionPage({
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="text-3xl font-bold tracking-tight">{institution.name}</h1>
+      <PageTitle>{institution.name}</PageTitle>
       <p className="text-muted-foreground">
         {[institutionTypeLabels[institution.institutionType], institution.city]
           .filter(Boolean)

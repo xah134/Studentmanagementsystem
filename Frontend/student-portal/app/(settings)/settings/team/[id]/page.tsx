@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 
+import { PageTitle } from "@/components/page-title"
 import { getUser, getUserName } from "@/components/users/users"
 
 export default async function TeamMemberPage({
@@ -16,9 +17,7 @@ export default async function TeamMemberPage({
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="text-3xl font-bold tracking-tight">
-        {getUserName(user) || user.email}
-      </h1>
+      <PageTitle>{getUserName(user) || user.email}</PageTitle>
       <p>{user.email}</p>
     </div>
   )
