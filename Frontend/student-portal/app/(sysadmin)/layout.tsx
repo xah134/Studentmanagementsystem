@@ -3,10 +3,10 @@
 import { Building2, LayoutDashboard } from "lucide-react"
 
 import { AppSidebar } from "@/components/app.sidebar"
+import { AppHeader, PageTitleProvider } from "@/components/page-title"
 import {
   SidebarInset,
   SidebarProvider,
-  SidebarTrigger,
 } from "@/components/ui/Sidebar/sidebar"
 import { TooltipProvider } from "@/components/ui/Tooltip/tooltip"
 
@@ -34,10 +34,10 @@ export default function SystemAdminLayout({
           user={{ name: "System admin", email: "" }}
         />
         <SidebarInset>
-          <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger />
-          </header>
-          <div className="flex flex-1 flex-col p-6">{children}</div>
+          <PageTitleProvider>
+            <AppHeader />
+            <div className="flex flex-1 flex-col p-6">{children}</div>
+          </PageTitleProvider>
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

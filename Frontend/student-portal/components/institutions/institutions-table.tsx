@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
 import { toast } from "sonner"
 
@@ -67,6 +68,7 @@ const columns: ColumnDef<DataTableFeatures, Institution, any>[] = [
 ]
 
 export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
+  const router = useRouter()
   const [rows, setRows] = React.useState<Institution[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -96,7 +98,10 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const rowActions = React.useMemo<DataTableRowActionsConfig<Institution>>(
     () => ({
       getLabel: (institution) => institution.name,
-      viewHref: (institution) => `/institutions/${institution.id}`,
+      onView: (institution) => {
+        sessionStorage.setItem("portal.institutionId", institution.id)
+        router.push("/portal")
+      },
       editHref: (institution) => `/institutions/${institution.id}/edit`,
       menu: [
         {
@@ -113,7 +118,7 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
         },
       ],
     }),
-    []
+    [router]
   )
 
   return (

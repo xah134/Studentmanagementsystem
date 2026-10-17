@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { getInstitution } from "@/components/institutions/institutions"
+import { PageTitle } from "@/components/page-title"
 
 export default async function EditInstitutionPage({
   params,
@@ -14,9 +15,5 @@ export default async function EditInstitutionPage({
     notFound()
   }
 
-  return (
-    <h1 className="text-3xl font-bold tracking-tight">
-      Edit {institution.name}
-    </h1>
-  )
+  return <PageTitle>{`Edit ${institution.name}`}</PageTitle>
 }

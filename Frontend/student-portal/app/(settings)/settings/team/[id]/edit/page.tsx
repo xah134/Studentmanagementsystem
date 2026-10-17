@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 
+import { PageTitle } from "@/components/page-title"
 import { getUser, getUserName } from "@/components/users/users"
 
 export default async function EditTeamMemberPage({
@@ -14,9 +15,5 @@ export default async function EditTeamMemberPage({
     notFound()
   }
 
-  return (
-    <h1 className="text-3xl font-bold tracking-tight">
-      Edit {getUserName(user) || user.email}
-    </h1>
-  )
+  return <PageTitle>{`Edit ${getUserName(user) || user.email}`}</PageTitle>
 }
