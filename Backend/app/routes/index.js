@@ -13,4 +13,4 @@ indexRoutes.use("/support", supportRoutes);
 indexRoutes.use("/initialize", initializeRoutes);
 indexRoutes.use("/auth", authRoutes);
 
-export default indexRoutes;s
+export default indexRoutes;
