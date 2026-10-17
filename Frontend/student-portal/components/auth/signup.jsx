@@ -76,6 +76,7 @@ export function SignUpForm({ className, ...props }) {
                     id="signup-password"
                     name="password"
                     type={showPassword ? "text" : "password"}
+                    placeholder="At least 8 characters"
                     required
                     className="pr-9"
                   />

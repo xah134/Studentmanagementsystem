@@ -95,6 +95,7 @@ export function UpdatePasswordForm({ className, ...props }) {
                     id="new-password"
                     name="password"
                     type={showPassword ? "text" : "password"}
+                    placeholder="At least 8 characters"
                     required
                     className="pr-9"
                   />
@@ -117,6 +118,7 @@ export function UpdatePasswordForm({ className, ...props }) {
                   id="confirm-password"
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
+                  placeholder="At least 8 characters"
                   required
                 />
               </Field>
