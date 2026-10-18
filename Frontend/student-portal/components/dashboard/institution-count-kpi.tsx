@@ -4,17 +4,16 @@ import { useEffect, useState } from "react"
 import { Building2 } from "lucide-react"
 
 import { KpiWidget } from "@/components/kpi/kpi-widget"
+import { apiUrl, authHeaders } from "@/lib/api"
 
 export function InstitutionCountKpi() {
   const [value, setValue] = useState<number | null>(null)
   const [description, setDescription] = useState("Registered institutions")
 
   useEffect(() => {
-    const apiUrl =
-      process.env.NEXT_PUBLIC_STUDENT_PORTAL_API_URL ||
-      "http://localhost:5156/api"
-
-    fetch(`${apiUrl}/institutions?page=1&pageSize=1`)
+    fetch(`${apiUrl()}/institutions?page=1&pageSize=1`, {
+      headers: authHeaders(),
+    })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({}))
         if (!response.ok) {

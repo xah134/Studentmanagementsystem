@@ -16,10 +16,9 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/Field/field"
 import { Input } from "@/components/ui/Input/input"
 
-import { userRoleLabels, type UserRole } from "./users"
+import { apiUrl, authHeaders } from "@/lib/api"
 
-const API_URL =
-  process.env.NEXT_PUBLIC_STUDENT_PORTAL_API_URL || "http://localhost:5156/api"
+import { userRoleLabels, type UserRole } from "./users"
 
 const selectClassName =
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -59,9 +58,10 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
     if (!open) return
     const controller = new AbortController()
 
-    fetch(`${API_URL}/institutions?page=1&pageSize=50`, {
+    fetch(`${apiUrl()}/institutions?page=1&pageSize=50`, {
       cache: "no-store",
       signal: controller.signal,
+      headers: authHeaders(),
     })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({}))
@@ -101,7 +101,7 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
     setPending(true)
 
     try {
-      const response = await fetch(`${API_URL}/users`, {
+      const response = await fetch(`${apiUrl()}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

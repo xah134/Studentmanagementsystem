@@ -1,3 +1,5 @@
+import { apiUrl, authHeaders } from "@/lib/api"
+
 export type UserRole =
   | "SYSTEM_ADMIN"
   | "INSTITUTION_ADMIN"
@@ -26,18 +28,20 @@ export const userRoleLabels: Record<UserRole, string> = {
 
 type UserApiItem = Omit<User, "isActive">
 
-const API_URL =
-  process.env.NEXT_PUBLIC_STUDENT_PORTAL_API_URL || "http://localhost:5156/api"
-
 export function getUserName(user: Pick<User, "firstName" | "lastName">) {
   return [user.firstName, user.lastName].filter(Boolean).join(" ")
 }
 
 // Loads the first 50 users (the API's maximum page size). Listed users start as active.
-export async function fetchUsers(signal?: AbortSignal): Promise<User[]> {
-  const response = await fetch(`${API_URL}/users?page=1&pageSize=50`, {
+export async function fetchUsers(
+  signal?: AbortSignal,
+  headers?: HeadersInit
+): Promise<User[]> {
+  const response = await fetch(`${apiUrl()}/users?page=1&pageSize=50`, {
     cache: "no-store",
     signal,
+    headers:
+      headers ?? (typeof window === "undefined" ? undefined : authHeaders()),
   })
   const payload = await response.json().catch(() => ({}))
 

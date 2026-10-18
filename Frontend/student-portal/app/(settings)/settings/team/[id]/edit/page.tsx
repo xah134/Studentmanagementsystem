@@ -1,16 +1,32 @@
-import { notFound } from "next/navigation"
+"use client"
+
+import { useEffect, useState } from "react"
+import { notFound, useParams } from "next/navigation"
 
 import { PageTitle } from "@/components/page-title"
-import { getUser, getUserName } from "@/components/users/users"
+import { getUser, getUserName, type User } from "@/components/users/users"
 
-export default async function EditTeamMemberPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-  const user = await getUser(id)
+export default function EditTeamMemberPage() {
+  const params = useParams<{ id: string }>()
+  const [user, setUser] = useState<User | null | undefined>(undefined)
 
+  useEffect(() => {
+    let cancelled = false
+    getUser(params.id)
+      .then((item) => {
+        if (!cancelled) setUser(item ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [params.id])
+
+  if (user === undefined) {
+    return <p className="text-sm text-muted-foreground">Loading user...</p>
+  }
   if (!user) {
     notFound()
   }

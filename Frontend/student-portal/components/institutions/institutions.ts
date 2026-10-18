@@ -1,3 +1,5 @@
+import { apiUrl, authHeaders } from "@/lib/api"
+
 export type InstitutionType =
   | "UNIVERSITY"
   | "COLLEGE"
@@ -32,17 +34,17 @@ type InstitutionApiItem = {
   city: string | null
 }
 
-const API_URL =
-  process.env.NEXT_PUBLIC_STUDENT_PORTAL_API_URL || "http://localhost:5156/api"
-
 // Loads the first 50 registered institutions (the API's maximum page size).
 // Rows from this endpoint are registered, so they start as active.
 export async function fetchInstitutions(
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  headers?: HeadersInit
 ): Promise<Institution[]> {
-  const response = await fetch(`${API_URL}/institutions?page=1&pageSize=50`, {
+  const response = await fetch(`${apiUrl()}/institutions?page=1&pageSize=50`, {
     cache: "no-store",
     signal,
+    headers:
+      headers ?? (typeof window === "undefined" ? undefined : authHeaders()),
   })
   const payload = await response.json().catch(() => ({}))
 

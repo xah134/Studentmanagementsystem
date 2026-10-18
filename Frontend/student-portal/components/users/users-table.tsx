@@ -12,6 +12,8 @@ import {
   type DataTableRowActionsConfig,
 } from "@/components/data-table"
 
+import { authHeaders } from "@/lib/api"
+
 import { fetchUsers, getUserName, userRoleLabels, type User } from "./users"
 
 const columnHelper = createColumnHelper<DataTableFeatures, User>()
@@ -71,7 +73,7 @@ export function UsersTable({ refreshKey = 0 }: { refreshKey?: number }) {
   React.useEffect(() => {
     const controller = new AbortController()
 
-    fetchUsers(controller.signal)
+    fetchUsers(controller.signal, authHeaders())
       .then((items) => {
         setRows(items)
         setError(null)

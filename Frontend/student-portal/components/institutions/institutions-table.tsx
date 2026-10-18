@@ -13,6 +13,8 @@ import {
   type DataTableRowActionsConfig,
 } from "@/components/data-table"
 
+import { authHeaders } from "@/lib/api"
+
 import {
   fetchInstitutions,
   institutionTypeLabels,
@@ -76,7 +78,7 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
   React.useEffect(() => {
     const controller = new AbortController()
 
-    fetchInstitutions(controller.signal)
+    fetchInstitutions(controller.signal, authHeaders())
       .then((items) => {
         setRows(items)
         setError(null)
