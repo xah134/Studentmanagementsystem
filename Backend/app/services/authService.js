@@ -77,6 +77,23 @@ class AuthService {
             return { error: error.message };
         }
     }
+
+    static async SignOut(accessToken, refreshToken) {
+        try {
+            const client = supabase();
+            const { error: sessionError } = await client.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+            });
+            if (sessionError) return { error: sessionError };
+
+            const { error } = await client.auth.signOut();
+            if (error) return { error };
+            return { success: true };
+        } catch (error) {
+            return { error };
+        }
+    }
 }
 
 export default AuthService;

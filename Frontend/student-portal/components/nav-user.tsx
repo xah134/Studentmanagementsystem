@@ -1,15 +1,9 @@
 "use client"
 
-import Link from "next/link"
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Settings,
-  Sparkles,
-} from "lucide-react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { ChevronsUpDown, LogOut } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   Avatar,
@@ -32,6 +26,9 @@ import {
   useSidebar,
 } from "@/components/ui/Sidebar/sidebar"
 
+const apiUrl =
+  process.env.NEXT_PUBLIC_STUDENT_PORTAL_API_URL || "http://localhost:5156/api"
+
 export function NavUser({
   user,
 }: {
@@ -42,12 +39,43 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const [signingOut, setSigningOut] = useState(false)
   const initials = user.name
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("")
+
+  async function handleSignOut() {
+    if (signingOut) return
+
+    const accessToken = sessionStorage.getItem("portal.accessToken")
+    const refreshToken = sessionStorage.getItem("portal.refreshToken")
+
+    if (accessToken && refreshToken) {
+      setSigningOut(true)
+      try {
+        const response = await fetch(`${apiUrl}/auth/signout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ accessToken, refreshToken }),
+        })
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}))
+          toast.error(payload.message || "Could not sign out")
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not sign out")
+      }
+    }
+
+    sessionStorage.removeItem("portal.accessToken")
+    sessionStorage.removeItem("portal.refreshToken")
+    setSigningOut(false)
+    router.push("/")
+  }
 
   return (
     <SidebarMenu>
@@ -96,33 +124,7 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href="/settings" />}>
-                <Settings />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem disabled={signingOut} onClick={handleSignOut}>
               <LogOut />
               Log out
             </DropdownMenuItem>

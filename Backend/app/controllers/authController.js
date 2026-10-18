@@ -29,10 +29,16 @@ class AuthController {
                 return res.status(400).json({ message: user.error });
             }
             const userData = await prisma.users.findUnique({ where: { email } });
+            const session = user.data?.session;
             return res.status(200).json({
                 message: "User signed in",
                 data: userData,
-                accessToken: user.data?.session?.access_token || null,
+                ...(session && {
+                    session: {
+                        accessToken: session.access_token,
+                        refreshToken: session.refresh_token,
+                    },
+                }),
             });
         } catch (error) {
             return res.status(500).json({ message: error.message });
@@ -65,6 +71,21 @@ class AuthController {
             return res.status(200).json({ message: "Password updated", data: user.data });
         }
         catch (error) {
+            return res.status(500).json({ message: error.message });
+        }
+    }
+    static async signOut(req, res) {
+        try {
+            const { accessToken, refreshToken } = req.body;
+            if (!accessToken || !refreshToken) {
+                return res.status(400).json({ message: "accessToken and refreshToken are required" });
+            }
+            const result = await AuthService.SignOut(accessToken, refreshToken);
+            if (result.error) {
+                return res.status(400).json({ message: result.error.message });
+            }
+            return res.status(200).json({ message: "User signed out" });
+        } catch (error) {
             return res.status(500).json({ message: error.message });
         }
     }

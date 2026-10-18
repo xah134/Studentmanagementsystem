@@ -75,6 +75,10 @@ export function LoginForm({
         toast.error(payload.message || "Could not sign in")
         return
       }
+      if (payload.session?.accessToken && payload.session?.refreshToken) {
+        sessionStorage.setItem("portal.accessToken", payload.session.accessToken)
+        sessionStorage.setItem("portal.refreshToken", payload.session.refreshToken)
+      }
       toast.success("Signed in")
       if (payload.data?.role === "SYSTEM_ADMIN") {
         router.push("/dashboard")
