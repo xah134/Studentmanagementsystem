@@ -8,19 +8,18 @@ datasource db {
 }
 
 model users {
-  id             String    @id @default(uuid())
-  email          String    @unique
-  auth_id        String?   @unique
-  first_name     String?
-  last_name      String?
-  phone          String?
-  is_deleted     Boolean   @default(false)
-  role           Role
-  institution_id String?
-  site_id        String?
-  created_at     DateTime  @default(now())
-  updated_at     DateTime  @updatedAt @default(now())
-
+  id               String        @id @default(uuid())
+  email            String        @unique
+  auth_id          String?       @unique
+  first_name       String?
+  last_name        String?
+  phone            String?
+  is_deleted       Boolean       @default(false)
+  role             Role
+  institution_id   String?
+  site_id          String?
+  created_at       DateTime      @default(now())
+  updated_at       DateTime      @default(now()) @updatedAt
   institution      institutions? @relation(fields: [institution_id], references: [id])
   site             sites?        @relation(fields: [site_id], references: [id])
   student_profile  students?
@@ -47,10 +46,11 @@ model institutions {
   description      String?
   is_deleted       Boolean         @default(false)
   created_at       DateTime        @default(now())
-  updated_at       DateTime        @updatedAt @default(now())
+  updated_at       DateTime        @default(now()) @updatedAt
 
-  sites sites[]
-  users users[]
+  sites     sites[]
+  users     users[]
+  lecturers lecturers[]
 
   @@map("institutions")
 }
@@ -67,7 +67,7 @@ model sites {
   description    String?
   is_deleted     Boolean  @default(false)
   created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
   institution_id String
 
   institution     institutions      @relation(fields: [institution_id], references: [id])
@@ -82,30 +82,30 @@ model sites {
 }
 
 model students {
-  id                String             @id @default(uuid())
-  phone             String?
-  address           String?
-  city              String?
-  state             String?
-  zip               String?
-  country           String?
-  foreign_national  Boolean            @default(false)
-  passport_number   String?
-  id_number         String?
-  date_of_birth     DateTime?          @db.Date
-  gender            Gender?
-  nationality       String?
-  site_id           String
+  id                  String             @id @default(uuid())
+  phone               String?
+  address             String?
+  city                String?
+  state               String?
+  zip                 String?
+  country             String?
+  foreign_national    Boolean            @default(false)
+  passport_number     String?
+  id_number           String?
+  date_of_birth       DateTime?          @db.Date
+  gender              Gender?
+  nationality         String?
+  site_id             String
   verification_status VerificationStatus @default(PENDING)
-  is_deleted        Boolean            @default(false)
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt @default(now())
-  user_id           String             @unique
+  is_deleted          Boolean            @default(false)
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @default(now()) @updatedAt
+  user_id             String             @unique
 
-  site               sites                @relation(fields: [site_id], references: [id])
-  user               users                @relation(fields: [user_id], references: [id])
-  student_documents  student_documents[]
-  guardians          guardians[]
+  site              sites               @relation(fields: [site_id], references: [id])
+  user              users               @relation(fields: [user_id], references: [id])
+  student_documents student_documents[]
+  guardians         guardians[]
 
   @@map("students")
 }
@@ -124,16 +124,19 @@ model lecturers {
   state               String?
   zip                 String?
   country             String?
-  site_id             String
+  site_id             String?
+  institution_id      String
+  department_id       String?
   verification_status VerificationStatus @default(PENDING)
   is_deleted          Boolean            @default(false)
   created_at          DateTime           @default(now())
-  updated_at          DateTime           @updatedAt @default(now())
-  user_id             String             @unique
+  updated_at          DateTime           @default(now()) @updatedAt
+  user_id             String?            @unique
 
-  site                sites                 @relation(fields: [site_id], references: [id])
-  user                users                 @relation(fields: [user_id], references: [id])
-  lecturer_documents  lecturer_documents[]
+  site               sites?               @relation(fields: [site_id], references: [id])
+  institution        institutions         @relation(fields: [institution_id], references: [id])
+  user               users?               @relation(fields: [user_id], references: [id])
+  lecturer_documents lecturer_documents[]
 
   @@map("lecturers")
 }
@@ -146,7 +149,7 @@ model guardians {
   phone        String?
   email        String?
   created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
 
   student students @relation(fields: [student_id], references: [id])
 
@@ -154,16 +157,16 @@ model guardians {
 }
 
 model student_documents {
-  id                String             @id @default(uuid())
-  student_id        String
-  document_type_id  String
-  document_url      String
+  id                  String             @id @default(uuid())
+  student_id          String
+  document_type_id    String
+  document_url        String
   verification_status VerificationStatus @default(PENDING)
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt @default(now())
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @default(now()) @updatedAt
 
-  student        students                @relation(fields: [student_id], references: [id])
-  document_type  student_document_types  @relation(fields: [document_type_id], references: [id])
+  student       students               @relation(fields: [student_id], references: [id])
+  document_type student_document_types @relation(fields: [document_type_id], references: [id])
 
   @@map("student_documents")
 }
@@ -175,10 +178,10 @@ model lecturer_documents {
   document_url        String
   verification_status VerificationStatus @default(PENDING)
   created_at          DateTime           @default(now())
-  updated_at          DateTime           @updatedAt @default(now())
+  updated_at          DateTime           @default(now()) @updatedAt
 
-  lecturer       lecturers                 @relation(fields: [lecturer_id], references: [id])
-  document_type  lecturer_document_types   @relation(fields: [document_type_id], references: [id])
+  lecturer      lecturers               @relation(fields: [lecturer_id], references: [id])
+  document_type lecturer_document_types @relation(fields: [document_type_id], references: [id])
 
   @@map("lecturer_documents")
 }
@@ -187,7 +190,7 @@ model lecturer_document_types {
   id         String   @id @default(uuid())
   name       String   @unique
   created_at DateTime @default(now())
-  updated_at DateTime @updatedAt @default(now())
+  updated_at DateTime @default(now()) @updatedAt
 
   lecturer_documents lecturer_documents[]
 
@@ -198,7 +201,7 @@ model student_document_types {
   id         String   @id @default(uuid())
   name       String   @unique
   created_at DateTime @default(now())
-  updated_at DateTime @updatedAt @default(now())
+  updated_at DateTime @default(now()) @updatedAt
 
   student_documents student_documents[]
 
@@ -251,7 +254,7 @@ model site_whatsapp {
   session_name String   @unique
   is_deleted   Boolean  @default(false)
   created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
 
   site sites @relation(fields: [site_id], references: [id])
 
@@ -266,7 +269,7 @@ model support_tickets {
   preview    String?
   opened_at  DateTime?
   created_at DateTime            @default(now())
-  updated_at DateTime            @updatedAt @default(now())
+  updated_at DateTime            @default(now()) @updatedAt
 
   site     sites              @relation(fields: [site_id], references: [id])
   messages support_messages[]
