@@ -148,6 +148,7 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
               <FieldLabel htmlFor="create-user-first-name">First name</FieldLabel>
               <Input
                 id="create-user-first-name"
+                placeholder="Ada"
                 value={form.firstName}
                 onChange={(event) => update("firstName", event.target.value)}
                 required
@@ -157,6 +158,7 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
               <FieldLabel htmlFor="create-user-last-name">Last name</FieldLabel>
               <Input
                 id="create-user-last-name"
+                placeholder="Lovelace"
                 value={form.lastName}
                 onChange={(event) => update("lastName", event.target.value)}
                 required
@@ -167,6 +169,7 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
               <Input
                 id="create-user-email"
                 type="email"
+                placeholder="ada@example.com"
                 value={form.email}
                 onChange={(event) => update("email", event.target.value)}
                 required
@@ -176,6 +179,7 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
               <FieldLabel htmlFor="create-user-phone">Phone</FieldLabel>
               <Input
                 id="create-user-phone"
+                placeholder="+27 21 000 0000"
                 value={form.phone}
                 onChange={(event) => update("phone", event.target.value)}
               />
@@ -185,6 +189,7 @@ export function CreateUserDialog({ onCreated }: { onCreated: () => void }) {
               <Input
                 id="create-user-password"
                 type="password"
+                placeholder="At least 8 characters"
                 value={form.password}
                 onChange={(event) => update("password", event.target.value)}
                 required

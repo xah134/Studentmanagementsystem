@@ -127,6 +127,7 @@ export function LoginForm({
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
+                    placeholder="Your password"
                     required
                     className="pr-9"
                   />
