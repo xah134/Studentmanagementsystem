@@ -24,12 +24,20 @@ export type AppNavSection = {
   items: AppNavItem[]
 }
 
-function isCurrent(pathname: string, url: string) {
-  return pathname === url || pathname.startsWith(`${url}/`)
+function isCurrent(pathname: string, url: string, urls: string[]) {
+  if (pathname === url) return true
+  if (!pathname.startsWith(`${url}/`)) return false
+  return !urls.some(
+    (other) =>
+      other !== url &&
+      other.startsWith(`${url}/`) &&
+      (pathname === other || pathname.startsWith(`${other}/`))
+  )
 }
 
 export function NavMain({ sections }: { sections: AppNavSection[] }) {
   const pathname = usePathname()
+  const urls = sections.flatMap((section) => section.items.map((item) => item.url))
 
   return (
     <>
@@ -42,7 +50,7 @@ export function NavMain({ sections }: { sections: AppNavSection[] }) {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   tooltip={item.title}
-                  isActive={isCurrent(pathname, item.url)}
+                  isActive={isCurrent(pathname, item.url, urls)}
                   render={<Link href={item.url} />}
                 >
                   {item.icon ? <item.icon /> : null}
