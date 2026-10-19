@@ -39,6 +39,8 @@ function toListItem(site) {
     state: site.state,
     address: site.address,
     description: site.description,
+    latitude: site.latitude,
+    longitude: site.longitude,
     createdAt: site.created_at,
   };
 }
@@ -178,6 +180,8 @@ export class SiteService {
             state: true,
             address: true,
             description: true,
+            latitude: true,
+            longitude: true,
             created_at: true,
           },
         }),
