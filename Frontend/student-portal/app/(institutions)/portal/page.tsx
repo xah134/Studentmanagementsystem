@@ -9,6 +9,7 @@ import {
   institutionTypeLabels,
   type Institution,
 } from "@/components/institutions/institutions"
+import { CampusOverviewMap } from "@/components/campuses/campus-map"
 import { KpiWidget } from "@/components/kpi/kpi-widget"
 import { PageTitle } from "@/components/page-title"
 import { apiUrl } from "@/lib/api"
@@ -111,6 +112,7 @@ export default function InstitutionPortalPage() {
       <div className="grid gap-4 sm:grid-cols-2">
         <CampusCountKpi institutionId={institution.id} />
       </div>
+      <CampusOverviewMap institutionId={institution.id} />
     </div>
   )
 }

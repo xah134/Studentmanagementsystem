@@ -7,6 +7,8 @@ export type Campus = {
   state: string | null
   address: string | null
   description: string | null
+  latitude: number | null
+  longitude: number | null
   createdAt: string
 }
 

@@ -15,8 +15,18 @@ import {
 } from "@/components/ui/Dialog/dialog"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/Field/field"
 import { Input } from "@/components/ui/Input/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/Tabs/tabs"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/Tabs/tabs"
 
+import {
+  CampusAddressSearch,
+  CampusLocationMap,
+  type LocationSelection,
+} from "./campus-map"
 import {
   createCampus,
   updateCampus,
@@ -102,6 +112,18 @@ export function CreateCampusDialog({
     setForm((current) => ({ ...current, [field]: value }))
   }
 
+  function applyLocation(selection: LocationSelection) {
+    setForm((current) => ({
+      ...current,
+      address: selection.address ?? current.address,
+      city: selection.city ?? current.city,
+      state: selection.state ?? current.state,
+      zip: selection.zip ?? current.zip,
+      latitude: selection.latitude,
+      longitude: selection.longitude,
+    }))
+  }
+
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!form.name.trim()) {
@@ -134,7 +156,9 @@ export function CreateCampusDialog({
       setDialogOpen(false)
       onSaved()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save campus")
+      toast.error(
+        error instanceof Error ? error.message : "Could not save campus"
+      )
     } finally {
       setPending(false)
     }
@@ -183,7 +207,9 @@ export function CreateCampusDialog({
                     id={`${fieldId}-description`}
                     placeholder="City centre campus"
                     value={form.description}
-                    onChange={(event) => update("description", event.target.value)}
+                    onChange={(event) =>
+                      update("description", event.target.value)
+                    }
                   />
                 </Field>
               </FieldGroup>
@@ -191,7 +217,9 @@ export function CreateCampusDialog({
             <TabsContent value="address">
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor={`${fieldId}-address`}>Address</FieldLabel>
+                  <FieldLabel htmlFor={`${fieldId}-address`}>
+                    Address
+                  </FieldLabel>
                   <Input
                     id={`${fieldId}-address`}
                     placeholder="12 Main Road"
@@ -229,9 +257,21 @@ export function CreateCampusDialog({
               </FieldGroup>
             </TabsContent>
             <TabsContent value="location">
+              <div className="mb-4 flex flex-col gap-4">
+                <CampusAddressSearch onSelect={applyLocation} />
+                <CampusLocationMap
+                  latitude={form.latitude}
+                  longitude={form.longitude}
+                  onChange={(latitude, longitude) => {
+                    setForm((current) => ({ ...current, latitude, longitude }))
+                  }}
+                />
+              </div>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor={`${fieldId}-latitude`}>Latitude</FieldLabel>
+                  <FieldLabel htmlFor={`${fieldId}-latitude`}>
+                    Latitude
+                  </FieldLabel>
                   <Input
                     id={`${fieldId}-latitude`}
                     placeholder="-33.9249"
@@ -247,7 +287,9 @@ export function CreateCampusDialog({
                     id={`${fieldId}-longitude`}
                     placeholder="18.4241"
                     value={form.longitude}
-                    onChange={(event) => update("longitude", event.target.value)}
+                    onChange={(event) =>
+                      update("longitude", event.target.value)
+                    }
                   />
                 </Field>
               </FieldGroup>
