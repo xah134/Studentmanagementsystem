@@ -57,6 +57,7 @@ export class UserService {
             last_name: true,
             phone: true,
             role: true,
+            institution_id: true,
             created_at: true,
           },
         }),
@@ -70,6 +71,7 @@ export class UserService {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        institutionId: user.institution_id,
         createdAt: user.created_at,
       }));
 
@@ -172,6 +174,98 @@ export class UserService {
           email: created.email,
           phone: created.phone,
           role: created.role,
+        },
+      };
+    } catch (err) {
+      if (err.code === 'P2002') {
+        return { error: 'A user with this email already exists', status: 400 };
+      }
+      return { error: err.message || 'Database error', status: 500 };
+    }
+  }
+
+  static async update(id, body) {
+    const firstName = requiredText(body?.firstName);
+    const lastName = requiredText(body?.lastName);
+    const email = requiredText(body?.email);
+    const password = typeof body?.password === 'string' ? body.password : '';
+    const role = body?.role;
+    const phone = requiredText(body?.phone);
+
+    if (!firstName) {
+      return { error: 'First name is required', status: 400 };
+    }
+    if (!lastName) {
+      return { error: 'Last name is required', status: 400 };
+    }
+    if (!email) {
+      return { error: 'Email is required', status: 400 };
+    }
+    if (!ROLES.includes(role)) {
+      return { error: 'Role is not valid', status: 400 };
+    }
+    // Blank means "leave the password alone". Anything typed must still be
+    // at least 8 characters. A valid password is deliberately ignored here:
+    // edit only updates the Prisma user and never calls Supabase.
+    if (password.length > 0 && password.length < 8) {
+      return { error: 'Password must be at least 8 characters', status: 400 };
+    }
+
+    try {
+      const existing = await prisma.users.findFirst({
+        where: { id, is_deleted: false },
+        select: { id: true },
+      });
+      if (!existing) {
+        return { error: 'User not found', status: 404 };
+      }
+
+      let institutionId = null;
+      if (role !== Role.SYSTEM_ADMIN) {
+        institutionId = requiredText(body?.institutionId);
+        if (!institutionId) {
+          return { error: 'Institution is required', status: 400 };
+        }
+        const institution = await prisma.institutions.findFirst({
+          where: { id: institutionId, is_deleted: false },
+          select: { id: true },
+        });
+        if (!institution) {
+          return { error: 'Institution not found', status: 400 };
+        }
+      }
+
+      // auth_id and password are intentionally not selected or returned
+      const updated = await prisma.users.update({
+        where: { id },
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone: phone || null,
+          role,
+          institution_id: institutionId,
+        },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true,
+          role: true,
+          institution_id: true,
+        },
+      });
+
+      return {
+        data: {
+          id: updated.id,
+          firstName: updated.first_name,
+          lastName: updated.last_name,
+          email: updated.email,
+          phone: updated.phone,
+          role: updated.role,
+          institutionId: updated.institution_id,
         },
       };
     } catch (err) {

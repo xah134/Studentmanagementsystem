@@ -14,6 +14,7 @@ import {
 
 import { authHeaders } from "@/lib/api"
 
+import { CreateUserDialog } from "./create-user-dialog"
 import { fetchUsers, getUserName, userRoleLabels, type User } from "./users"
 
 const columnHelper = createColumnHelper<DataTableFeatures, User>()
@@ -69,6 +70,11 @@ export function UsersTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [rows, setRows] = React.useState<User[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [reloadKey, setReloadKey] = React.useState(0)
+  // Keep the last edited row after closing so the dialog doesn't flip to
+  // "Create" while it animates out.
+  const [editing, setEditing] = React.useState<User | null>(null)
+  const [editOpen, setEditOpen] = React.useState(false)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -88,13 +94,16 @@ export function UsersTable({ refreshKey = 0 }: { refreshKey?: number }) {
       })
 
     return () => controller.abort()
-  }, [refreshKey])
+  }, [refreshKey, reloadKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<User>>(
     () => ({
       getLabel: (user) => getUserName(user) || user.email,
       viewHref: (user) => `/settings/team/${user.id}`,
-      editHref: (user) => `/settings/team/${user.id}/edit`,
+      onEdit: (user) => {
+        setEditing(user)
+        setEditOpen(true)
+      },
       menu: [
         {
           label: "Mark as inactive",
@@ -127,6 +136,13 @@ export function UsersTable({ refreshKey = 0 }: { refreshKey?: number }) {
         filterColumn="name"
         filterPlaceholder="Filter users..."
         rowActions={rowActions}
+      />
+      <CreateUserDialog
+        user={editing}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        showTrigger={false}
+        onSaved={() => setReloadKey((key) => key + 1)}
       />
     </div>
   )

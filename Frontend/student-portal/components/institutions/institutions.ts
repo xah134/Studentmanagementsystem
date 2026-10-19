@@ -13,7 +13,10 @@ export type Institution = {
   name: string
   email: string
   institutionType: InstitutionType
+  phone: string | null
   city: string | null
+  country: string | null
+  website: string | null
   isActive: boolean
 }
 
@@ -31,7 +34,10 @@ type InstitutionApiItem = {
   name: string
   email: string
   institutionType: InstitutionType
+  phone: string | null
   city: string | null
+  country: string | null
+  website: string | null
 }
 
 // Loads the first 50 registered institutions (the API's maximum page size).
@@ -60,7 +66,10 @@ export async function fetchInstitutions(
     name: item.name,
     email: item.email,
     institutionType: item.institutionType,
+    phone: item.phone ?? null,
     city: item.city ?? null,
+    country: item.country ?? null,
+    website: item.website ?? null,
     isActive: true,
   }))
 }

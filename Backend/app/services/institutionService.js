@@ -144,4 +144,73 @@ export class InstitutionService {
       return { error: err.message || 'Database error', status: 500 };
     }
   }
+
+  static async update(id, body) {
+    const name = requiredText(body?.name);
+    const email = requiredText(body?.email);
+    const institutionType = body?.institutionType;
+
+    if (!name) {
+      return { error: 'Name is required', status: 400 };
+    }
+    if (!email) {
+      return { error: 'Email is required', status: 400 };
+    }
+    if (!INSTITUTION_TYPES.includes(institutionType)) {
+      return { error: 'Institution type is not valid', status: 400 };
+    }
+
+    try {
+      const existing = await prisma.institutions.findFirst({
+        where: { id, is_deleted: false },
+        select: { id: true },
+      });
+      if (!existing) {
+        return { error: 'Institution not found', status: 404 };
+      }
+
+      const updated = await prisma.institutions.update({
+        where: { id },
+        data: {
+          name,
+          email,
+          institution_type: institutionType,
+          phone: optionalText(body?.phone),
+          city: optionalText(body?.city),
+          country: optionalText(body?.country),
+          website: optionalText(body?.website),
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          website: true,
+          phone: true,
+          city: true,
+          country: true,
+          institution_type: true,
+        },
+      });
+
+      return {
+        data: {
+          id: updated.id,
+          name: updated.name,
+          email: updated.email,
+          website: updated.website,
+          phone: updated.phone,
+          city: updated.city,
+          country: updated.country,
+          institutionType: updated.institution_type,
+        },
+      };
+    } catch (err) {
+      // The unique constraint ignores the row being edited, so saving
+      // without changing the email does not trigger this.
+      if (err.code === 'P2002') {
+        return { error: 'An institution with this email already exists', status: 400 };
+      }
+      return { error: err.message || 'Database error', status: 500 };
+    }
+  }
 }
