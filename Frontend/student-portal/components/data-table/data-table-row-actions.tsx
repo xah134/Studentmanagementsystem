@@ -24,6 +24,7 @@ export type DataTableRowActionsConfig<TData> = {
   getLabel?: (row: TData) => string
   onView?: (row: TData) => void
   viewHref?: (row: TData) => string
+  onEdit?: (row: TData) => void
   editHref?: (row: TData) => string
   menu?: DataTableMenuAction<TData>[]
 }
@@ -78,7 +79,16 @@ function DataTableRowActions<TData>({
           <Eye />
         </Button>
       ) : null}
-      {editHref ? (
+      {actions.onEdit ? (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`Edit ${label}`}
+          onClick={() => actions.onEdit?.(row)}
+        >
+          <Pencil />
+        </Button>
+      ) : editHref ? (
         <Button
           variant="ghost"
           size="icon-sm"
