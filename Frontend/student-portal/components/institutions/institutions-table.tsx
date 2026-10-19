@@ -15,6 +15,7 @@ import {
 
 import { authHeaders } from "@/lib/api"
 
+import { CreateInstitutionDialog } from "./create-institution-dialog"
 import {
   fetchInstitutions,
   institutionTypeLabels,
@@ -74,6 +75,11 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [rows, setRows] = React.useState<Institution[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [reloadKey, setReloadKey] = React.useState(0)
+  // Keep the last edited row after closing so the dialog doesn't flip to
+  // "Create" while it animates out.
+  const [editing, setEditing] = React.useState<Institution | null>(null)
+  const [editOpen, setEditOpen] = React.useState(false)
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -95,7 +101,7 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
       })
 
     return () => controller.abort()
-  }, [refreshKey])
+  }, [refreshKey, reloadKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Institution>>(
     () => ({
@@ -104,7 +110,10 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
         sessionStorage.setItem("portal.institutionId", institution.id)
         router.push("/portal")
       },
-      editHref: (institution) => `/institutions/${institution.id}/edit`,
+      onEdit: (institution) => {
+        setEditing(institution)
+        setEditOpen(true)
+      },
       menu: [
         {
           label: "Mark as inactive",
@@ -135,6 +144,13 @@ export function InstitutionsTable({ refreshKey = 0 }: { refreshKey?: number }) {
         filterColumn="name"
         filterPlaceholder="Filter institutions..."
         rowActions={rowActions}
+      />
+      <CreateInstitutionDialog
+        institution={editing}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        showTrigger={false}
+        onSaved={() => setReloadKey((key) => key + 1)}
       />
     </div>
   )

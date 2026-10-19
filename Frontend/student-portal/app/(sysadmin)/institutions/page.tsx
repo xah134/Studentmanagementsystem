@@ -14,7 +14,7 @@ export default function InstitutionsPage() {
       <PageTitle>Institutions</PageTitle>
       <div className="flex justify-end">
         <CreateInstitutionDialog
-          onCreated={() => setRefreshKey((key) => key + 1)}
+          onSaved={() => setRefreshKey((key) => key + 1)}
         />
       </div>
       <InstitutionsTable refreshKey={refreshKey} />

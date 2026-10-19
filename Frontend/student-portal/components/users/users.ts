@@ -14,6 +14,7 @@ export type User = {
   email: string
   phone: string | null
   role: UserRole
+  institutionId: string | null
   createdAt: string
   isActive: boolean
 }
