@@ -205,8 +205,9 @@ export class InstitutionService {
         },
       };
     } catch (err) {
-      // The unique constraint ignores the row being edited, so saving
-      // without changing the email does not trigger this.
+      if (err.code === 'P2023') {
+        return { error: 'Institution not found', status: 404 };
+      }
       if (err.code === 'P2002') {
         return { error: 'An institution with this email already exists', status: 400 };
       }

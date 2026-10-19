@@ -312,7 +312,7 @@ function UserForm({
                     type="password"
                     placeholder={
                       isEdit
-                        ? "Leave blank to keep the current password"
+                        ? "Password is not changed on save"
                         : "At least 8 characters"
                     }
                     value={form.password}
