@@ -54,27 +54,31 @@ export function NavUser({
     const accessToken = sessionStorage.getItem("portal.accessToken")
     const refreshToken = sessionStorage.getItem("portal.refreshToken")
 
-    if (accessToken && refreshToken) {
-      setSigningOut(true)
-      try {
-        const response = await fetch(`${apiUrl}/auth/signout`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accessToken, refreshToken }),
-        })
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}))
-          toast.error(payload.message || "Could not sign out")
-        }
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not sign out")
-      }
+    if (!accessToken || !refreshToken) {
+      router.push("/")
+      return
     }
 
-    sessionStorage.removeItem("portal.accessToken")
-    sessionStorage.removeItem("portal.refreshToken")
-    setSigningOut(false)
-    router.push("/")
+    setSigningOut(true)
+    try {
+      const response = await fetch(`${apiUrl}/auth/signout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accessToken, refreshToken }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        toast.error(payload.message || "Could not sign out")
+        return
+      }
+      sessionStorage.removeItem("portal.accessToken")
+      sessionStorage.removeItem("portal.refreshToken")
+      router.push("/")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not sign out")
+    } finally {
+      setSigningOut(false)
+    }
   }
 
   return (

@@ -85,13 +85,17 @@ class AuthService {
                 access_token: accessToken,
                 refresh_token: refreshToken,
             });
-            if (sessionError) return { error: sessionError };
+            if (sessionError) {
+                return { error: sessionError.message };
+            }
 
             const { error } = await client.auth.signOut();
-            if (error) return { error };
+            if (error) {
+                return { error: error.message };
+            }
             return { success: true };
         } catch (error) {
-            return { error };
+            return { error: error.message };
         }
     }
 }
