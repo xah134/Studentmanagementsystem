@@ -27,6 +27,28 @@ function isDuplicateEmail(error) {
   );
 }
 
+function notFound(err, message) {
+  if (err?.code === 'P2023') {
+    return { error: message, status: 404 };
+  }
+  return null;
+}
+
+// Sign-in looks the person up in Supabase by email, then in Prisma by that
+// same email. An edit has to change both, or the new address cannot sign in.
+async function syncSignInEmail(authId, email) {
+  if (!authId) return {};
+  const { error } = await supabase().auth.admin.updateUserById(authId, {
+    email,
+    email_confirm: true,
+  });
+  if (!error) return {};
+  if (isDuplicateEmail(error)) {
+    return { error: 'A user with this email already exists', status: 400 };
+  }
+  return { error: error.message, status: 400 };
+}
+
 export class UserService {
   static async list({ page = 1, pageSize = 10 }) {
     const pageNum = parseInt(page, 10);
@@ -57,6 +79,7 @@ export class UserService {
             last_name: true,
             phone: true,
             role: true,
+            institution_id: true,
             created_at: true,
           },
         }),
@@ -70,6 +93,7 @@ export class UserService {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        institutionId: user.institution_id,
         createdAt: user.created_at,
       }));
 
@@ -175,6 +199,127 @@ export class UserService {
         },
       };
     } catch (err) {
+      if (err.code === 'P2002') {
+        return { error: 'A user with this email already exists', status: 400 };
+      }
+      return { error: err.message || 'Database error', status: 500 };
+    }
+  }
+
+  static async update(id, body) {
+    const firstName = requiredText(body?.firstName);
+    const lastName = requiredText(body?.lastName);
+    const email = requiredText(body?.email);
+    const password = typeof body?.password === 'string' ? body.password : '';
+    const role = body?.role;
+    const phone = requiredText(body?.phone);
+
+    if (!firstName) {
+      return { error: 'First name is required', status: 400 };
+    }
+    if (!lastName) {
+      return { error: 'Last name is required', status: 400 };
+    }
+    if (!email) {
+      return { error: 'Email is required', status: 400 };
+    }
+    if (!ROLES.includes(role)) {
+      return { error: 'Role is not valid', status: 400 };
+    }
+    // Blank means "leave the password alone". Anything typed must still be
+    // at least 8 characters. A valid password is deliberately ignored here
+    // and is never sent to Supabase.
+    if (password.length > 0 && password.length < 8) {
+      return { error: 'Password must be at least 8 characters', status: 400 };
+    }
+
+    let existing;
+    try {
+      existing = await prisma.users.findFirst({
+        where: { id, is_deleted: false },
+        select: { id: true, email: true, auth_id: true },
+      });
+    } catch (err) {
+      return notFound(err, 'User not found') || { error: err.message || 'Database error', status: 500 };
+    }
+    if (!existing) {
+      return { error: 'User not found', status: 404 };
+    }
+
+    let institutionId = null;
+    if (role !== Role.SYSTEM_ADMIN) {
+      institutionId = requiredText(body?.institutionId);
+      if (!institutionId) {
+        return { error: 'Institution is required', status: 400 };
+      }
+      try {
+        const institution = await prisma.institutions.findFirst({
+          where: { id: institutionId, is_deleted: false },
+          select: { id: true },
+        });
+        if (!institution) {
+          return { error: 'Institution not found', status: 400 };
+        }
+      } catch (err) {
+        if (err?.code === 'P2023') {
+          return { error: 'Institution not found', status: 400 };
+        }
+        return { error: err.message || 'Database error', status: 500 };
+      }
+    }
+
+    const emailChanged = existing.email !== email;
+    if (emailChanged) {
+      const taken = await prisma.users.findFirst({
+        where: { email, NOT: { id: existing.id } },
+        select: { id: true },
+      });
+      if (taken) {
+        return { error: 'A user with this email already exists', status: 400 };
+      }
+      const synced = await syncSignInEmail(existing.auth_id, email);
+      if (synced.error) return synced;
+    }
+
+    try {
+      const updated = await prisma.users.update({
+        where: { id },
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone: phone || null,
+          role,
+          institution_id: institutionId,
+        },
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          phone: true,
+          role: true,
+          institution_id: true,
+        },
+      });
+
+      return {
+        data: {
+          id: updated.id,
+          firstName: updated.first_name,
+          lastName: updated.last_name,
+          email: updated.email,
+          phone: updated.phone,
+          role: updated.role,
+          institutionId: updated.institution_id,
+        },
+      };
+    } catch (err) {
+      if (emailChanged) {
+        await syncSignInEmail(existing.auth_id, existing.email);
+      }
+      const missing = notFound(err, 'User not found');
+      if (missing) return missing;
       if (err.code === 'P2002') {
         return { error: 'A user with this email already exists', status: 400 };
       }

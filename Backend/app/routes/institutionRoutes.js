@@ -8,5 +8,6 @@ const router = Router();
 
 router.get('/', requireAuth, requireRole(Role.SYSTEM_ADMIN), InstitutionController.list);
 router.post('/', InstitutionController.create);
+router.patch('/:id', InstitutionController.update);
 
 export default router;

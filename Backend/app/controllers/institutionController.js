@@ -34,4 +34,16 @@ export class InstitutionController {
       return res.status(500).json({ message: err.message || 'Internal server error' });
     }
   }
+
+  static async update(req, res) {
+    try {
+      const result = await InstitutionService.update(req.params.id, req.body || {});
+      if (result.error) {
+        return res.status(result.status || 400).json({ message: result.error });
+      }
+      return res.status(200).json({ message: 'Institution updated', data: result.data });
+    } catch (err) {
+      return res.status(500).json({ message: err.message || 'Internal server error' });
+    }
+  }
 }

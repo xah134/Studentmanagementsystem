@@ -13,7 +13,7 @@ export default function TeamSettingsPage() {
     <div className="flex flex-col gap-6">
       <PageTitle>Team</PageTitle>
       <div className="flex justify-end">
-        <CreateUserDialog onCreated={() => setRefreshKey((key) => key + 1)} />
+        <CreateUserDialog onSaved={() => setRefreshKey((key) => key + 1)} />
       </div>
       <UsersTable refreshKey={refreshKey} />
     </div>
