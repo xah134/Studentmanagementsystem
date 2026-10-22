@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, MapPin } from "lucide-react"
+import { LayoutDashboard, MapPin, UserRound } from "lucide-react"
 
 import { AppSidebar } from "@/components/app.sidebar"
 import { AppHeader, PageTitleProvider } from "@/components/page-title"
@@ -16,6 +16,7 @@ const institutionNav = [
     items: [
       { title: "Overview", url: "/portal", icon: LayoutDashboard },
       { title: "Campuses", url: "/portal/campuses", icon: MapPin },
+      { title: "Lecturers", url: "/portal/lecturers", icon: UserRound },
     ],
   },
 ]
