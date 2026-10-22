@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { GraduationCap, MapPin } from "lucide-react"
+import { GraduationCap, MapPin, UserRound } from "lucide-react"
 
 import {
   fetchInstitutions,
@@ -102,6 +102,50 @@ function CampusCountKpi({ institutionId }: { institutionId: string }) {
   )
 }
 
+function LecturerCountKpi({ institutionId }: { institutionId: string }) {
+  const [value, setValue] = React.useState<number | null>(null)
+  const [description, setDescription] = React.useState("Registered lecturers")
+
+  React.useEffect(() => {
+    const params = new URLSearchParams({
+      institutionId,
+      page: "1",
+      pageSize: "1",
+    })
+
+    fetch(`${apiUrl()}/lecturers?${params}`)
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          throw new Error(payload.message || "Failed to load lecturers count")
+        }
+        return payload
+      })
+      .then((payload) => {
+        if (typeof payload?.summary?.totalCount !== "number") {
+          throw new Error("Invalid response structure")
+        }
+        setValue(payload.summary.totalCount)
+        setDescription("Registered lecturers")
+      })
+      .catch((error: unknown) => {
+        setValue(null)
+        setDescription(
+          error instanceof Error ? error.message : "Error loading count"
+        )
+      })
+  }, [institutionId])
+
+  return (
+    <KpiWidget
+      label="Lecturers"
+      value={value}
+      description={description}
+      icon={UserRound}
+    />
+  )
+}
+
 export default function InstitutionPortalPage() {
   const router = useRouter()
   const [institution, setInstitution] = React.useState<Institution | null>(null)
@@ -153,9 +197,10 @@ export default function InstitutionPortalPage() {
           <p className="text-muted-foreground">{details.join(" · ")}</p>
         ) : null}
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <CampusCountKpi institutionId={institution.id} />
         <FacultyCountKpi institutionId={institution.id} />
+        <LecturerCountKpi institutionId={institution.id} />
       </div>
       <CampusOverviewMap institutionId={institution.id} />
     </div>

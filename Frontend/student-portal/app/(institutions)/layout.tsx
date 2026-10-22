@@ -1,6 +1,6 @@
 "use client"
 
-import { GraduationCap, LayoutDashboard, MapPin } from "lucide-react"
+import { GraduationCap, LayoutDashboard, MapPin, UserRound } from "lucide-react"
 
 import { AppSidebar } from "@/components/app.sidebar"
 import { AppHeader, PageTitleProvider } from "@/components/page-title"
@@ -17,6 +17,7 @@ const institutionNav = [
       { title: "Overview", url: "/portal", icon: LayoutDashboard },
       { title: "Campuses", url: "/portal/campuses", icon: MapPin },
       { title: "Faculties", url: "/portal/faculties", icon: GraduationCap },
+      { title: "Lecturers", url: "/portal/lecturers", icon: UserRound },
     ],
   },
 ]
