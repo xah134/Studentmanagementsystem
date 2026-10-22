@@ -51,6 +51,7 @@ model institutions {
   sites     sites[]
   users     users[]
   lecturers lecturers[]
+  faculties faculties[]
 
   @@map("institutions")
 }
@@ -74,11 +75,31 @@ model sites {
   users           users[]
   students        students[]
   lecturers       lecturers[]
+  faculties       faculties[]
   site_whatsapp   site_whatsapp?
   support_tickets support_tickets[]
 
   @@unique([institution_id, name])
   @@map("sites")
+}
+
+model faculties {
+  id             String   @id @default(uuid())
+  name           String
+  code           String?
+  description    String?
+  is_deleted     Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+  institution_id String
+  site_id        String?
+
+  institution institutions @relation(fields: [institution_id], references: [id])
+  site        sites?       @relation(fields: [site_id], references: [id])
+  lecturers   lecturers[]
+
+  @@unique([institution_id, name])
+  @@map("faculties")
 }
 
 model students {
@@ -135,6 +156,7 @@ model lecturers {
 
   site               sites?               @relation(fields: [site_id], references: [id])
   institution        institutions         @relation(fields: [institution_id], references: [id])
+  department         faculties?           @relation(fields: [department_id], references: [id])
   user               users?               @relation(fields: [user_id], references: [id])
   lecturer_documents lecturer_documents[]
 
