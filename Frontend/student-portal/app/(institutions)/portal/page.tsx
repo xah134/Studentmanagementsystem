@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { GraduationCap, MapPin, UserRound } from "lucide-react"
+import { BookOpen, GraduationCap, MapPin, UserRound } from "lucide-react"
 
 import {
   fetchInstitutions,
@@ -54,6 +54,50 @@ function FacultyCountKpi({ institutionId }: { institutionId: string }) {
       value={value}
       description={description}
       icon={GraduationCap}
+    />
+  )
+}
+
+function CourseCountKpi({ institutionId }: { institutionId: string }) {
+  const [value, setValue] = React.useState<number | null>(null)
+  const [description, setDescription] = React.useState("Registered courses")
+
+  React.useEffect(() => {
+    const params = new URLSearchParams({
+      institutionId,
+      page: "1",
+      pageSize: "1",
+    })
+
+    fetch(`${apiUrl()}/courses?${params}`)
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          throw new Error(payload.message || "Failed to load courses count")
+        }
+        return payload
+      })
+      .then((payload) => {
+        if (typeof payload?.summary?.totalCount !== "number") {
+          throw new Error("Invalid response structure")
+        }
+        setValue(payload.summary.totalCount)
+        setDescription("Registered courses")
+      })
+      .catch((error: unknown) => {
+        setValue(null)
+        setDescription(
+          error instanceof Error ? error.message : "Error loading count"
+        )
+      })
+  }, [institutionId])
+
+  return (
+    <KpiWidget
+      label="Courses"
+      value={value}
+      description={description}
+      icon={BookOpen}
     />
   )
 }
@@ -200,6 +244,7 @@ export default function InstitutionPortalPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <CampusCountKpi institutionId={institution.id} />
         <FacultyCountKpi institutionId={institution.id} />
+        <CourseCountKpi institutionId={institution.id} />
         <LecturerCountKpi institutionId={institution.id} />
       </div>
       <CampusOverviewMap institutionId={institution.id} />
