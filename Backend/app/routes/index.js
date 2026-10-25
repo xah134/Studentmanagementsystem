@@ -1,4 +1,5 @@
 import institutionRoutes from './institutionRoutes.js';
+import studentRoutes from './studentRoutes.js';
 import siteRoutes from './siteRoutes.js';
 import lecturerRoutes from './lecturerRoutes.js';
 import facultyRoutes from './facultyRoutes.js';
@@ -12,6 +13,7 @@ import supportRoutes from "./supportRoutes.js";
 const indexRoutes = Router();
 
 indexRoutes.use('/institutions', institutionRoutes);
+indexRoutes.use('/students', studentRoutes);
 indexRoutes.use('/sites', siteRoutes);
 indexRoutes.use('/lecturers', lecturerRoutes);
 indexRoutes.use('/faculties', facultyRoutes);

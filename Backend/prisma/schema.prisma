@@ -144,10 +144,10 @@ model students {
   is_deleted          Boolean            @default(false)
   created_at          DateTime           @default(now())
   updated_at          DateTime           @default(now()) @updatedAt
-  user_id             String             @unique
+  user_id             String?             @unique
 
   site              sites               @relation(fields: [site_id], references: [id])
-  user              users               @relation(fields: [user_id], references: [id])
+  user              users?               @relation(fields: [user_id], references: [id])
   student_documents student_documents[]
   guardians         guardians[]
 
