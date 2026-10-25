@@ -2,7 +2,13 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { GraduationCap, MapPin, UserRound, Backpack } from "lucide-react"
+import {
+  Backpack,
+  BookOpen,
+  GraduationCap,
+  MapPin,
+  UserRound,
+} from "lucide-react"
 
 import {
   fetchInstitutions,
