@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Backpack,
   BookOpen,
   GraduationCap,
   LayoutDashboard,
