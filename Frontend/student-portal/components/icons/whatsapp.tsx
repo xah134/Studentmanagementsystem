@@ -1,6 +1,5 @@
 import type { LucideProps } from "lucide-react"
 
-/** WhatsApp mark sized like a Lucide icon for sidebar nav. */
 export function WhatsAppIcon({
   className,
   size = 24,

@@ -234,7 +234,6 @@ export function CampusSupportInbox({ siteId }: { siteId: string }) {
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] min-h-0 w-full overflow-hidden bg-[#efeae2]">
-      {/* Chat list — WhatsApp-style left rail */}
       <aside className="flex w-full max-w-[380px] shrink-0 flex-col border-r border-black/10 bg-[#ffffff] md:w-[380px]">
         <div className="flex items-center gap-3 bg-[#f0f2f5] px-4 py-3">
           <div className="flex size-10 items-center justify-center rounded-full bg-[#dfe5e7] text-xs font-semibold text-[#54656f]">
@@ -321,7 +320,6 @@ export function CampusSupportInbox({ siteId }: { siteId: string }) {
         </div>
       </aside>
 
-      {/* Active chat — WhatsApp-style thread */}
       <section className="flex min-w-0 flex-1 flex-col">
         {!selectedId ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 border-b border-black/10 bg-[#f0f2f5] px-8 text-center">

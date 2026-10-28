@@ -65,7 +65,6 @@ export class StorageService {
       return { error: 'Could not resolve logo URL', status: 502 };
     }
 
-    // Bust caches after replace uploads.
     const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
     return { data: { path, publicUrl } };
   }

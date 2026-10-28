@@ -34,8 +34,6 @@ function notFound(err, message) {
   return null;
 }
 
-// Sign-in looks the person up in Supabase by email, then in Prisma by that
-// same email. An edit has to change both, or the new address cannot sign in.
 async function syncSignInEmail(authId, email) {
   if (!authId) return {};
   const { error } = await supabase().auth.admin.updateUserById(authId, {
@@ -71,7 +69,6 @@ export class UserService {
           orderBy: { created_at: 'desc' },
           skip: (pageNum - 1) * sizeNum,
           take: sizeNum,
-          // auth_id is intentionally not selected
           select: {
             id: true,
             email: true,
@@ -226,9 +223,6 @@ export class UserService {
     if (!ROLES.includes(role)) {
       return { error: 'Role is not valid', status: 400 };
     }
-    // Blank means "leave the password alone". Anything typed must still be
-    // at least 8 characters. A valid password is deliberately ignored here
-    // and is never sent to Supabase.
     if (password.length > 0 && password.length < 8) {
       return { error: 'Password must be at least 8 characters', status: 400 };
     }

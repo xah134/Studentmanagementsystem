@@ -69,12 +69,9 @@ function formFromInstitution(institution?: Institution | null): FormState {
 }
 
 type CreateInstitutionDialogProps = {
-  // When set, the dialog edits this institution instead of creating one.
   institution?: Institution | null
-  // Pass open/onOpenChange to control the dialog from outside (edit from a row).
   open?: boolean
   onOpenChange?: (open: boolean) => void
-  // Hide the "Create institution" button when the parent opens the dialog.
   showTrigger?: boolean
   onSaved: () => void
 }
@@ -100,7 +97,6 @@ export function CreateInstitutionDialog({
         <DialogTrigger render={<Button />}>Create institution</DialogTrigger>
       ) : null}
       <DialogContent>
-        {/* The popup unmounts when closed, so the form starts fresh each time. */}
         <InstitutionForm
           institution={institution}
           onSaved={() => {
@@ -135,7 +131,6 @@ function InstitutionForm({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    // Required fields all live on Details; jump back so the problem is visible.
     if (!form.name.trim() || !form.email.trim()) {
       setTab("details")
       toast.error(

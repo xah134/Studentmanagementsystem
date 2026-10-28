@@ -12,7 +12,6 @@ function optionalText(value) {
   return text || null;
 }
 
-// undefined means "not sent"; empty strings and null are stored as null.
 function textField(body, key) {
   if (body?.[key] === undefined) return undefined;
   return optionalText(body[key]);
@@ -42,7 +41,6 @@ const detailSelect = {
   site_id: true,
   verification_status: true,
   created_at: true,
-  // user_id and department_id are intentionally not selected
   site: { select: { name: true } },
 };
 
@@ -202,7 +200,6 @@ async function findOpenLecturer(id) {
   }
 }
 
-// The campus must be open and belong to the same institution.
 async function checkSite(siteId, institutionId) {
   try {
     const site = await prisma.sites.findFirst({
@@ -351,7 +348,6 @@ export class LecturerService {
           date_of_birth: v.dateOfBirth ?? null,
           foreign_national: v.foreignNational ?? false,
           verification_status: v.verificationStatus ?? 'PENDING',
-          // user_id and department_id stay null
         },
         select: detailSelect,
       });
@@ -375,7 +371,7 @@ export class LecturerService {
     const institution = await findOpenInstitution(v.institutionId);
     if (institution.error) return institution;
 
-    let siteId; // undefined keeps the saved campus
+    let siteId;
     if (v.siteId === null) {
       siteId = null;
     } else if (v.siteId) {
@@ -385,8 +381,6 @@ export class LecturerService {
     }
 
     try {
-      // Fields that were not sent stay undefined, so Prisma leaves them alone.
-      // user_id and department_id are never part of the update.
       const updated = await prisma.lecturers.update({
         where: { id: found.lecturer.id },
         data: {

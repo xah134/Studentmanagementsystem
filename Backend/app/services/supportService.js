@@ -5,7 +5,6 @@ import { WahaService } from "./wahaService.js";
 
 const STAFF_STATUSES = ["IN_PROGRESS", "WAITING", "DONE"];
 
-/** WAHA may return id as a string or as {_serialized, id, ...}. */
 function wahaMessageId(value) {
   if (value == null) return null;
   if (typeof value === "string") return value || null;

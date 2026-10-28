@@ -71,8 +71,6 @@ export function UsersTable({ refreshKey = 0 }: { refreshKey?: number }) {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [reloadKey, setReloadKey] = React.useState(0)
-  // Keep the last edited row after closing so the dialog doesn't flip to
-  // "Create" while it animates out.
   const [editing, setEditing] = React.useState<User | null>(null)
   const [editOpen, setEditOpen] = React.useState(false)
 

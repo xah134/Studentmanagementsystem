@@ -66,7 +66,7 @@ export class AttendanceService {
       };
     }
 
-    const activeYear = await prisma.academic_years.findFirst({
+    const year = await prisma.academic_years.findFirst({
       where: {
         institution_id: slot.institution_id,
         is_deleted: false,
@@ -76,14 +76,6 @@ export class AttendanceService {
       orderBy: { starts_on: "desc" },
       select: { id: true, name: true },
     });
-    const yearFallback = activeYear
-      ? null
-      : await prisma.academic_years.findFirst({
-          where: { institution_id: slot.institution_id, is_deleted: false },
-          orderBy: { starts_on: "desc" },
-          select: { id: true, name: true },
-        });
-    const year = activeYear || yearFallback;
 
     const enrollmentWhere = {
       is_deleted: false,
@@ -229,10 +221,7 @@ export class AttendanceService {
     const enrolledSet = new Set(enrolled.map((e) => e.student_id));
     for (const id of studentIds) {
       if (!enrolledSet.has(id)) {
-        return {
-          error: `Student ${id} is not enrolled in this course`,
-          status: 400,
-        };
+        return { error: "Student is not enrolled in this course", status: 400 };
       }
     }
 

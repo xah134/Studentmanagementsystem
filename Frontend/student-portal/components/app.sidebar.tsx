@@ -15,7 +15,6 @@ import {
 export type SidebarBrand = {
   name: string
   logoUrl?: string | null
-  /** Optional line under the name (e.g. institution under campus). */
   subtitle?: string | null
 }
 

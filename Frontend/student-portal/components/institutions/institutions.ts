@@ -42,8 +42,6 @@ type InstitutionApiItem = {
   logo?: string | null
 }
 
-// Loads the first 50 registered institutions (the API's maximum page size).
-// Rows from this endpoint are registered, so they start as active.
 export async function fetchInstitutions(
   signal?: AbortSignal,
   headers?: HeadersInit

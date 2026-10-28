@@ -70,12 +70,9 @@ function formFromUser(user?: User | null): FormState {
 }
 
 type CreateUserDialogProps = {
-  // When set, the dialog edits this user instead of creating one.
   user?: User | null
-  // Pass open/onOpenChange to control the dialog from outside (edit from a row).
   open?: boolean
   onOpenChange?: (open: boolean) => void
-  // Hide the "Create user" button when the parent opens the dialog.
   showTrigger?: boolean
   onSaved: () => void
 }
@@ -101,7 +98,6 @@ export function CreateUserDialog({
         <DialogTrigger render={<Button />}>Create user</DialogTrigger>
       ) : null}
       <DialogContent>
-        {/* The popup unmounts when closed, so the form starts fresh each time. */}
         <UserForm
           user={user}
           onSaved={() => {
@@ -168,7 +164,6 @@ function UserForm({
     })
   }
 
-  // Returns the first problem and the tab it lives on, so submit can switch to it.
   function validate(): { tab: TabValue; message: string } | null {
     if (!form.firstName.trim()) {
       return { tab: "profile", message: "First name is required" }

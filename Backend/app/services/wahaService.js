@@ -77,7 +77,6 @@ export class WahaService {
     if (!existing.error && existing.data) {
       const status = existing.data.status;
 
-      // Avoid PUT while the browser session is live — it can reset to STARTING.
       if (
         status === "STARTING" ||
         status === "SCAN_QR_CODE" ||
@@ -112,7 +111,6 @@ export class WahaService {
       return { data: created.data };
     }
 
-    // Race: created between get and post — update + start.
     const updated = await waha(`/api/sessions/${encodeURIComponent(sessionName)}`, {
       method: "PUT",
       body: JSON.stringify({ name: sessionName, config }),
@@ -129,7 +127,6 @@ export class WahaService {
       { method: "POST" }
     );
     if (started.error) {
-      // Session may already be running after create race.
       const again = await this.getSession(sessionName);
       if (!again.error && READY_STATUSES.has(again.data?.status)) {
         return { data: again.data };

@@ -23,7 +23,6 @@ type FullCalendarViewProps = {
     center?: string
     right?: string
   }
-  /** Pixel height, or omit for a viewport-capped default */
   height?: number
   slotMinTime?: string
   slotMaxTime?: string

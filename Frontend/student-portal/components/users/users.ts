@@ -33,7 +33,6 @@ export function getUserName(user: Pick<User, "firstName" | "lastName">) {
   return [user.firstName, user.lastName].filter(Boolean).join(" ")
 }
 
-// Loads the first 50 users (the API's maximum page size). Listed users start as active.
 export async function fetchUsers(
   signal?: AbortSignal,
   headers?: HeadersInit
