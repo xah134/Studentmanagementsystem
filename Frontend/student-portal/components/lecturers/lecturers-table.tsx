@@ -34,14 +34,30 @@ import {
 const columnHelper = createColumnHelper<DataTableFeatures, Lecturer>()
 
 const columns: ColumnDef<DataTableFeatures, Lecturer, any>[] = [
+  columnHelper.accessor(
+    (lecturer) =>
+      [lecturer.firstName, lecturer.lastName].filter(Boolean).join(" "),
+    {
+      id: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {[row.original.firstName, row.original.lastName]
+            .filter(Boolean)
+            .join(" ") || "—"}
+        </span>
+      ),
+      filterFn: "includesString",
+    }
+  ),
   columnHelper.accessor((lecturer) => lecturer.phone ?? "", {
     id: "phone",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Phone" />
     ),
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.phone ?? ""}</span>
-    ),
+    cell: ({ row }) => row.original.phone ?? "",
     filterFn: "includesString",
   }),
   columnHelper.accessor((lecturer) => lecturer.idNumber ?? "", {
@@ -90,10 +106,12 @@ const columns: ColumnDef<DataTableFeatures, Lecturer, any>[] = [
 
 export function LecturersTable({
   institutionId,
+  siteId,
   refreshKey = 0,
   onChanged,
 }: {
   institutionId: string
+  siteId?: string
   refreshKey?: number
   onChanged: () => void
 }) {
@@ -108,7 +126,7 @@ export function LecturersTable({
   React.useEffect(() => {
     const controller = new AbortController()
 
-    fetchLecturers(institutionId, controller.signal)
+    fetchLecturers(institutionId, controller.signal, siteId)
       .then((items) => {
         setRows(items)
         setError(null)
@@ -123,7 +141,7 @@ export function LecturersTable({
       })
 
     return () => controller.abort()
-  }, [institutionId, refreshKey])
+  }, [institutionId, siteId, refreshKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Lecturer>>(
     () => ({

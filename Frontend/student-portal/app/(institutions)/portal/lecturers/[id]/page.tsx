@@ -93,8 +93,13 @@ export default function LecturerPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageTitle>Lecturer</PageTitle>
+      <PageTitle>
+        {[lecturer.firstName, lecturer.lastName].filter(Boolean).join(" ") ||
+          "Lecturer"}
+      </PageTitle>
       <Section title="Profile">
+        <Detail label="First name" value={lecturer.firstName} />
+        <Detail label="Last name" value={lecturer.lastName} />
         <Detail label="Phone" value={lecturer.phone} />
         <Detail
           label="Gender"

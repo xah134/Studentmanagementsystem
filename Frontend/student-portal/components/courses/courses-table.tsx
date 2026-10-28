@@ -67,12 +67,18 @@ const columns: ColumnDef<DataTableFeatures, Course, any>[] = [
 
 export function CoursesTable({
   institutionId,
+  siteId,
   refreshKey = 0,
   onChanged,
+  viewHrefBase = "/portal/courses",
+  readOnly = false,
 }: {
   institutionId: string
+  siteId?: string
   refreshKey?: number
   onChanged: () => void
+  viewHrefBase?: string
+  readOnly?: boolean
 }) {
   const [rows, setRows] = React.useState<Course[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -85,7 +91,7 @@ export function CoursesTable({
   React.useEffect(() => {
     const controller = new AbortController()
 
-    fetchCourses(institutionId, controller.signal)
+    fetchCourses(institutionId, controller.signal, siteId)
       .then((items) => {
         setRows(items)
         setError(null)
@@ -102,31 +108,35 @@ export function CoursesTable({
       })
 
     return () => controller.abort()
-  }, [institutionId, refreshKey])
+  }, [institutionId, siteId, refreshKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Course>>(
     () => ({
       getLabel: (course) => course.name,
-      viewHref: (course) => `/portal/courses/${course.id}`,
-      onEdit: async (course) => {
-        try {
-          const detail = await getCourse(course.id)
-          setEditing(detail)
-          setEditOpen(true)
-        } catch (err) {
-          toast.error(
-            err instanceof Error ? err.message : "Failed to load course"
-          )
-        }
-      },
-      menu: [
-        {
-          label: "Remove",
-          onSelect: (course) => setRemoving(course),
-        },
-      ],
+      viewHref: (course) => `${viewHrefBase}/${course.id}`,
+      ...(readOnly
+        ? {}
+        : {
+            onEdit: async (course: Course) => {
+              try {
+                const detail = await getCourse(course.id)
+                setEditing(detail)
+                setEditOpen(true)
+              } catch (err) {
+                toast.error(
+                  err instanceof Error ? err.message : "Failed to load course"
+                )
+              }
+            },
+            menu: [
+              {
+                label: "Remove",
+                onSelect: (course: Course) => setRemoving(course),
+              },
+            ],
+          }),
     }),
-    []
+    [viewHrefBase, readOnly]
   )
 
   async function confirmRemove() {

@@ -92,9 +92,14 @@ export default function StudentPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageTitle>Student</PageTitle>
+      <PageTitle>
+        {[student.firstName, student.lastName].filter(Boolean).join(" ") ||
+          "Student"}
+      </PageTitle>
       <Section title="Profile">
         <dl className="grid gap-4 sm:grid-cols-2">
+          <Detail label="First name" value={student.firstName} />
+          <Detail label="Last name" value={student.lastName} />
           <Detail label="Phone" value={student.phone} />
           <Detail
             label="Gender"

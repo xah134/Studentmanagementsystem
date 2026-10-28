@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 
+import { CourseTimetablePanel } from "@/components/calendar/course-timetable-panel"
 import { fetchCampuses } from "@/components/campuses/campuses"
 import { getCourse, type CourseDetail } from "@/components/courses/courses"
 import { fetchFaculties } from "@/components/faculties/faculties"
@@ -105,6 +106,11 @@ export default function CoursePage() {
           { label: "Faculty", value: facultyName },
           { label: "Campus", value: campusName },
         ]}
+      />
+      <CourseTimetablePanel
+        courseId={course.id}
+        institutionId={course.institutionId}
+        editable
       />
     </div>
   )

@@ -59,10 +59,12 @@ const columns: ColumnDef<DataTableFeatures, Faculty, any>[] = [
 
 export function FacultiesTable({
   institutionId,
+  siteId,
   refreshKey = 0,
   onChanged,
 }: {
   institutionId: string
+  siteId?: string
   refreshKey?: number
   onChanged: () => void
 }) {
@@ -77,7 +79,7 @@ export function FacultiesTable({
   React.useEffect(() => {
     const controller = new AbortController()
 
-    fetchFaculties(institutionId, controller.signal)
+    fetchFaculties(institutionId, controller.signal, siteId)
       .then((items) => {
         setRows(items)
         setError(null)
@@ -94,7 +96,7 @@ export function FacultiesTable({
       })
 
     return () => controller.abort()
-  }, [institutionId, refreshKey])
+  }, [institutionId, siteId, refreshKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Faculty>>(
     () => ({

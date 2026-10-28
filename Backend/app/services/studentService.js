@@ -24,6 +24,8 @@ function toDateOnly(date) {
 
 const detailSelect = {
   id: true,
+  first_name: true,
+  last_name: true,
   phone: true,
   foreign_national: true,
   passport_number: true,
@@ -50,6 +52,8 @@ const detailSelect = {
 function toListItem(student) {
   return {
     id: student.id,
+    firstName: student.first_name,
+    lastName: student.last_name,
     phone: student.phone,
     nationality: student.nationality,
     idNumber: student.id_number,
@@ -64,6 +68,8 @@ function toListItem(student) {
 function toDetail(student) {
   return {
     id: student.id,
+    firstName: student.first_name,
+    lastName: student.last_name,
     phone: student.phone,
     foreignNational: student.foreign_national,
     passportNumber: student.passport_number,
@@ -174,10 +180,16 @@ function parseBody(body) {
   const guardians = parseGuardians(body?.guardians);
   if (guardians.error) return guardians;
 
+  const facultyId = textField(body, 'facultyId');
+  const courseId = textField(body, 'courseId');
+  const academicYearId = textField(body, 'academicYearId');
+
   return {
     value: {
       institutionId,
       siteId,
+      firstName: textField(body, 'firstName'),
+      lastName: textField(body, 'lastName'),
       phone: textField(body, 'phone'),
       passportNumber: textField(body, 'passportNumber'),
       idNumber: textField(body, 'idNumber'),
@@ -192,6 +204,9 @@ function parseBody(body) {
       foreignNational,
       verificationStatus,
       guardians: guardians.value,
+      facultyId,
+      courseId,
+      academicYearId,
     },
   };
 }
@@ -265,10 +280,73 @@ async function saveGuardians(tx, studentId, guardians) {
 }
 
 export class StudentService {
-  static async list({ institutionId, page = 1, pageSize = 10 }) {
+  static async enrollmentOverview({ institutionId }) {
+    const id = requiredText(institutionId);
+    if (!id) {
+      return { error: 'Institution ID is required', status: 400 };
+    }
+
+    const institution = await findOpenInstitution(id);
+    if (institution.error) return institution;
+
+    try {
+      const students = await prisma.students.findMany({
+        where: {
+          is_deleted: false,
+          site: { institution_id: institution.id, is_deleted: false },
+        },
+        select: {
+          created_at: true,
+          site_id: true,
+          site: { select: { id: true, name: true } },
+        },
+      });
+
+      const byYearMap = new Map();
+      const byCampusMap = new Map();
+
+      for (const student of students) {
+        const year = String(student.created_at.getUTCFullYear());
+        byYearMap.set(year, (byYearMap.get(year) || 0) + 1);
+
+        const campusKey = student.site_id;
+        const existing = byCampusMap.get(campusKey);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          byCampusMap.set(campusKey, {
+            siteId: campusKey,
+            siteName: student.site?.name || 'Unknown campus',
+            count: 1,
+          });
+        }
+      }
+
+      const byYear = [...byYearMap.entries()]
+        .map(([year, count]) => ({ year, count }))
+        .sort((a, b) => a.year.localeCompare(b.year));
+
+      const byCampus = [...byCampusMap.values()].sort((a, b) =>
+        a.siteName.localeCompare(b.siteName)
+      );
+
+      return {
+        data: {
+          totalStudents: students.length,
+          byYear,
+          byCampus,
+        },
+      };
+    } catch (err) {
+      return { error: err.message || 'Database error', status: 500 };
+    }
+  }
+
+  static async list({ institutionId, siteId, page = 1, pageSize = 10 }) {
     const pageNum = parseInt(page, 10);
     const sizeNum = parseInt(pageSize, 10);
     const id = requiredText(institutionId);
+    const campusFilter = requiredText(siteId);
 
     if (!id) {
       return { error: 'Institution is required', status: 400 };
@@ -283,11 +361,22 @@ export class StudentService {
     const institution = await findOpenInstitution(id);
     if (institution.error) return institution;
 
+    let campusId;
+    if (campusFilter) {
+      const campus = await findOpenCampus(campusFilter);
+      if (campus.error) return campus;
+      if (campus.site.institution_id !== institution.id) {
+        return { error: 'Campus not found', status: 400 };
+      }
+      campusId = campus.site.id;
+    }
+
     try {
       const where = {
         is_deleted: false,
         site: { institution_id: institution.id },
       };
+      if (campusId) where.site_id = campusId;
       const [students, totalCount] = await Promise.all([
         prisma.students.findMany({
           where,
@@ -296,6 +385,8 @@ export class StudentService {
           take: sizeNum,
           select: {
             id: true,
+            first_name: true,
+            last_name: true,
             phone: true,
             nationality: true,
             id_number: true,
@@ -350,6 +441,21 @@ export class StudentService {
     if (parsed.error) return parsed;
     const v = parsed.value;
 
+    const firstName = requiredText(v.firstName);
+    const lastName = requiredText(v.lastName);
+    if (!firstName || !lastName) {
+      return { error: 'First name and last name are required', status: 400 };
+    }
+    const courseId = requiredText(v.courseId);
+    const academicYearId = requiredText(v.academicYearId);
+    const facultyId = requiredText(v.facultyId);
+    if (!facultyId || !courseId || !academicYearId) {
+      return {
+        error: 'Department, course, and academic year are required',
+        status: 400,
+      };
+    }
+
     const institution = await findOpenInstitution(v.institutionId);
     if (institution.error) return institution;
 
@@ -359,11 +465,41 @@ export class StudentService {
       return { error: 'Campus not found', status: 400 };
     }
 
+    const course = await prisma.courses.findFirst({
+      where: {
+        id: courseId,
+        institution_id: institution.id,
+        faculty_id: facultyId,
+        is_deleted: false,
+      },
+      select: { id: true, site_id: true },
+    });
+    if (!course) {
+      return { error: 'Course not found for this department', status: 400 };
+    }
+    if (course.site_id && course.site_id !== campus.site.id) {
+      return { error: 'Course is not offered on this campus', status: 400 };
+    }
+
+    const year = await prisma.academic_years.findFirst({
+      where: {
+        id: academicYearId,
+        institution_id: institution.id,
+        is_deleted: false,
+      },
+      select: { id: true },
+    });
+    if (!year) {
+      return { error: 'Academic year not found', status: 400 };
+    }
+
     try {
       const created = await prisma.$transaction(async (tx) => {
         const student = await tx.students.create({
           data: {
             site_id: campus.site.id,
+            first_name: firstName,
+            last_name: lastName,
             phone: v.phone ?? null,
             passport_number: v.passportNumber ?? null,
             id_number: v.idNumber ?? null,
@@ -377,11 +513,18 @@ export class StudentService {
             date_of_birth: v.dateOfBirth ?? null,
             foreign_national: v.foreignNational ?? false,
             verification_status: v.verificationStatus ?? 'PENDING',
-            // user_id stays null
           },
           select: { id: true },
         });
         await saveGuardians(tx, student.id, v.guardians ?? []);
+        await tx.student_enrollments.create({
+          data: {
+            student_id: student.id,
+            course_id: course.id,
+            academic_year_id: year.id,
+            institution_id: institution.id,
+          },
+        });
         return tx.students.findFirst({
           where: { id: student.id },
           select: detailSelect,
@@ -423,6 +566,8 @@ export class StudentService {
           where: { id: found.student.id },
           data: {
             site_id: campus.site.id,
+            first_name: v.firstName,
+            last_name: v.lastName,
             phone: v.phone,
             passport_number: v.passportNumber,
             id_number: v.idNumber,

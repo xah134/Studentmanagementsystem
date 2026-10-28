@@ -143,10 +143,11 @@ function parseBody(body) {
 }
 
 export class FacultyService {
-  static async list({ institutionId, page = 1, pageSize = 10 }) {
+  static async list({ institutionId, siteId, page = 1, pageSize = 10 }) {
     const pageNum = parseInt(page, 10);
     const sizeNum = parseInt(pageSize, 10);
     const id = requiredText(institutionId);
+    const campusFilter = requiredText(siteId);
 
     if (!id) {
       return { error: 'Institution is required', status: 400 };
@@ -161,8 +162,16 @@ export class FacultyService {
     const institution = await findOpenInstitution(id);
     if (institution.error) return institution;
 
+    let campusFilterId = null;
+    if (campusFilter) {
+      const campus = await resolveCampus(campusFilter, institution.id);
+      if (campus.error) return campus;
+      campusFilterId = campus.value;
+    }
+
     try {
       const where = { is_deleted: false, institution_id: institution.id };
+      if (campusFilterId) where.site_id = campusFilterId;
       const [faculties, totalCount] = await Promise.all([
         prisma.faculties.findMany({
           where,

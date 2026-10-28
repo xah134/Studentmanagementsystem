@@ -34,14 +34,30 @@ import {
 const columnHelper = createColumnHelper<DataTableFeatures, Student>()
 
 const columns: ColumnDef<DataTableFeatures, Student, any>[] = [
+  columnHelper.accessor(
+    (student) =>
+      [student.firstName, student.lastName].filter(Boolean).join(" "),
+    {
+      id: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {[row.original.firstName, row.original.lastName]
+            .filter(Boolean)
+            .join(" ") || "—"}
+        </span>
+      ),
+      filterFn: "includesString",
+    }
+  ),
   columnHelper.accessor((student) => student.phone ?? "", {
     id: "phone",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Phone" />
     ),
-    cell: ({ row }) => (
-      <span className="font-medium">{row.original.phone ?? ""}</span>
-    ),
+    cell: ({ row }) => row.original.phone ?? "",
     filterFn: "includesString",
   }),
   columnHelper.accessor((student) => student.idNumber ?? "", {
@@ -98,10 +114,12 @@ const columns: ColumnDef<DataTableFeatures, Student, any>[] = [
 
 export function StudentsTable({
   institutionId,
+  siteId,
   refreshKey = 0,
   onChanged,
 }: {
   institutionId: string
+  siteId?: string
   refreshKey?: number
   onChanged: () => void
 }) {
@@ -116,7 +134,7 @@ export function StudentsTable({
   React.useEffect(() => {
     const controller = new AbortController()
 
-    fetchStudents(institutionId, controller.signal)
+    fetchStudents(institutionId, controller.signal, siteId)
       .then((items) => {
         setRows(items)
         setError(null)
@@ -131,7 +149,7 @@ export function StudentsTable({
       })
 
     return () => controller.abort()
-  }, [institutionId, refreshKey])
+  }, [institutionId, siteId, refreshKey])
 
   const rowActions = React.useMemo<DataTableRowActionsConfig<Student>>(
     () => ({

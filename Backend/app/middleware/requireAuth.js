@@ -35,11 +35,20 @@ export default async function requireAuth(req, res, next) {
       return res.status(401).json({ message: "Sign in required" });
     }
 
+    let institutionId = user.institution_id;
+    if (!institutionId && user.site_id) {
+      const site = await prisma.sites.findFirst({
+        where: { id: user.site_id, is_deleted: false },
+        select: { institution_id: true },
+      });
+      institutionId = site?.institution_id ?? null;
+    }
+
     req.actor = {
       id: user.id,
       email: user.email,
       role: user.role,
-      institutionId: user.institution_id,
+      institutionId,
       siteId: user.site_id,
     };
     return next();

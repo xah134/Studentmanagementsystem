@@ -5,6 +5,8 @@ export type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED"
 
 export type Lecturer = {
   id: string
+  firstName: string | null
+  lastName: string | null
   phone: string | null
   nationality: string | null
   idNumber: string | null
@@ -17,6 +19,8 @@ export type Lecturer = {
 
 export type LecturerDetail = {
   id: string
+  firstName: string | null
+  lastName: string | null
   phone: string | null
   foreignNational: boolean
   passportNumber: string | null
@@ -38,6 +42,8 @@ export type LecturerDetail = {
 
 export type LecturerInput = {
   institutionId: string
+  firstName: string
+  lastName: string
   phone: string
   gender: Gender | ""
   dateOfBirth: string
@@ -67,13 +73,15 @@ export const genderLabels: Record<Gender, string> = {
 
 export async function fetchLecturers(
   institutionId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  siteId?: string
 ): Promise<Lecturer[]> {
   const params = new URLSearchParams({
     institutionId,
     page: "1",
     pageSize: "50",
   })
+  if (siteId) params.set("siteId", siteId)
   const response = await fetch(`${apiUrl()}/lecturers?${params}`, {
     cache: "no-store",
     signal,

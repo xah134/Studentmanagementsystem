@@ -40,6 +40,8 @@ const selectClassName =
 type FormState = Omit<LecturerInput, "institutionId">
 
 const emptyForm: FormState = {
+  firstName: "",
+  lastName: "",
   phone: "",
   gender: "",
   dateOfBirth: "",
@@ -58,6 +60,8 @@ const emptyForm: FormState = {
 
 function formFromLecturer(lecturer: LecturerDetail): FormState {
   return {
+    firstName: lecturer.firstName ?? "",
+    lastName: lecturer.lastName ?? "",
     phone: lecturer.phone ?? "",
     gender: lecturer.gender ?? "",
     dateOfBirth: lecturer.dateOfBirth ?? "",
@@ -132,8 +136,15 @@ export function CreateLecturerDialog({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      toast.error("First and last name are required")
+      return
+    }
+
     const input: LecturerInput = {
       institutionId,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
       phone: form.phone.trim(),
       gender: form.gender,
       dateOfBirth: form.dateOfBirth,
@@ -199,6 +210,34 @@ export function CreateLecturerDialog({
             </TabsList>
             <TabsContent value="profile">
               <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor={`${fieldId}-firstName`}>
+                    First name
+                  </FieldLabel>
+                  <Input
+                    id={`${fieldId}-firstName`}
+                    placeholder="Sipho"
+                    value={form.firstName}
+                    onChange={(event) =>
+                      update("firstName", event.target.value)
+                    }
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`${fieldId}-lastName`}>
+                    Last name
+                  </FieldLabel>
+                  <Input
+                    id={`${fieldId}-lastName`}
+                    placeholder="Mabaso"
+                    value={form.lastName}
+                    onChange={(event) =>
+                      update("lastName", event.target.value)
+                    }
+                    required
+                  />
+                </Field>
                 <Field>
                   <FieldLabel htmlFor={`${fieldId}-phone`}>Phone</FieldLabel>
                   <Input

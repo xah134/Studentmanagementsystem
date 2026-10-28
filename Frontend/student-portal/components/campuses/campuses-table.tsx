@@ -1,8 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { createColumnHelper, type ColumnDef } from "@tanstack/react-table"
 import { toast } from "sonner"
+
+import { openCampusPortal } from "@/lib/campus-portal"
 
 import {
   DataTable,
@@ -66,6 +69,7 @@ export function CampusesTable({
   refreshKey?: number
   onChanged: () => void
 }) {
+  const router = useRouter()
   const [rows, setRows] = React.useState<Campus[]>([])
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
@@ -97,7 +101,10 @@ export function CampusesTable({
   const rowActions = React.useMemo<DataTableRowActionsConfig<Campus>>(
     () => ({
       getLabel: (campus) => campus.name,
-      viewHref: (campus) => `/portal/campuses/${campus.id}`,
+      onView: (campus) => {
+        openCampusPortal(campus.id)
+        router.push("/campus")
+      },
       onEdit: async (campus) => {
         try {
           const detail = await getCampus(campus.id)
@@ -114,7 +121,7 @@ export function CampusesTable({
         },
       ],
     }),
-    []
+    [router]
   )
 
   async function confirmRemove() {

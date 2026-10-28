@@ -30,13 +30,15 @@ export type FacultyInput = {
 
 export async function fetchFaculties(
   institutionId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  siteId?: string
 ): Promise<Faculty[]> {
   const params = new URLSearchParams({
     institutionId,
     page: "1",
     pageSize: "50",
   })
+  if (siteId) params.set("siteId", siteId)
   const response = await fetch(`${apiUrl()}/faculties?${params}`, {
     cache: "no-store",
     signal,

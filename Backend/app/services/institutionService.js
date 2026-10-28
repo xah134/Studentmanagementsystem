@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { StorageService } from './storageService.js';
 
 const INSTITUTION_TYPES = [
   'UNIVERSITY',
@@ -17,6 +18,34 @@ function optionalText(value) {
   const text = requiredText(value);
   return text || null;
 }
+
+function toInstitution(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    website: row.website,
+    phone: row.phone,
+    city: row.city,
+    country: row.country,
+    institutionType: row.institution_type,
+    logo: row.logo ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+const institutionSelect = {
+  id: true,
+  name: true,
+  email: true,
+  website: true,
+  phone: true,
+  city: true,
+  country: true,
+  institution_type: true,
+  logo: true,
+  created_at: true,
+};
 
 export class InstitutionService {
   static async list({ page = 1, pageSize = 10 }) {
@@ -40,32 +69,12 @@ export class InstitutionService {
           orderBy: { created_at: 'desc' },
           skip: (pageNum - 1) * sizeNum,
           take: sizeNum,
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            website: true,
-            phone: true,
-            city: true,
-            country: true,
-            institution_type: true,
-            created_at: true,
-          },
+          select: institutionSelect,
         }),
         prisma.institutions.count({ where }),
       ]);
 
-      const data = institutions.map((inst) => ({
-        id: inst.id,
-        name: inst.name,
-        email: inst.email,
-        website: inst.website,
-        phone: inst.phone,
-        city: inst.city,
-        country: inst.country,
-        institutionType: inst.institution_type,
-        createdAt: inst.created_at,
-      }));
+      const data = institutions.map(toInstitution);
 
       const pageCount = totalCount === 0 ? 0 : Math.ceil(totalCount / sizeNum);
 
@@ -112,34 +121,50 @@ export class InstitutionService {
           city: optionalText(body?.city),
           country: optionalText(body?.country),
           website: optionalText(body?.website),
+          logo: optionalText(body?.logo),
         },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          website: true,
-          phone: true,
-          city: true,
-          country: true,
-          institution_type: true,
-        },
+        select: institutionSelect,
       });
 
-      return {
-        data: {
-          id: created.id,
-          name: created.name,
-          email: created.email,
-          website: created.website,
-          phone: created.phone,
-          city: created.city,
-          country: created.country,
-          institutionType: created.institution_type,
-        },
-      };
+      return { data: toInstitution(created) };
     } catch (err) {
       if (err.code === 'P2002') {
         return { error: 'An institution with this email already exists', status: 400 };
+      }
+      return { error: err.message || 'Database error', status: 500 };
+    }
+  }
+
+  static async uploadLogo(id, file) {
+    if (!file) {
+      return { error: 'Logo file is required', status: 400 };
+    }
+
+    try {
+      const existing = await prisma.institutions.findFirst({
+        where: { id, is_deleted: false },
+        select: { id: true },
+      });
+      if (!existing) {
+        return { error: 'Institution not found', status: 404 };
+      }
+
+      const uploaded = await StorageService.uploadInstitutionLogo({
+        institutionId: existing.id,
+        buffer: file.buffer,
+        mimeType: file.mimetype,
+      });
+      if (uploaded.error) return uploaded;
+
+      const updated = await prisma.institutions.update({
+        where: { id: existing.id },
+        data: { logo: uploaded.data.publicUrl },
+        select: institutionSelect,
+      });
+      return { data: toInstitution(updated) };
+    } catch (err) {
+      if (err.code === 'P2023') {
+        return { error: 'Institution not found', status: 404 };
       }
       return { error: err.message || 'Database error', status: 500 };
     }
@@ -179,31 +204,12 @@ export class InstitutionService {
           city: optionalText(body?.city),
           country: optionalText(body?.country),
           website: optionalText(body?.website),
+          ...(body?.logo !== undefined ? { logo: optionalText(body.logo) } : {}),
         },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          website: true,
-          phone: true,
-          city: true,
-          country: true,
-          institution_type: true,
-        },
+        select: institutionSelect,
       });
 
-      return {
-        data: {
-          id: updated.id,
-          name: updated.name,
-          email: updated.email,
-          website: updated.website,
-          phone: updated.phone,
-          city: updated.city,
-          country: updated.country,
-          institutionType: updated.institution_type,
-        },
-      };
+      return { data: toInstitution(updated) };
     } catch (err) {
       if (err.code === 'P2023') {
         return { error: 'Institution not found', status: 404 };

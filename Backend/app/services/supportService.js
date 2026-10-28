@@ -1,18 +1,50 @@
+import { randomBytes } from "node:crypto";
 import prisma from "../config/prisma.js";
 import { Role } from "../types/user.js";
 import { WahaService } from "./wahaService.js";
 
 const STAFF_STATUSES = ["IN_PROGRESS", "WAITING", "DONE"];
 
+/** WAHA may return id as a string or as {_serialized, id, ...}. */
+function wahaMessageId(value) {
+  if (value == null) return null;
+  if (typeof value === "string") return value || null;
+  if (typeof value === "object") {
+    if (typeof value._serialized === "string") return value._serialized;
+    if (typeof value.id === "string") return value.id;
+  }
+  return null;
+}
+
+function generateTicketCode() {
+  return `SUP-${randomBytes(3).toString("hex").toUpperCase()}`;
+}
+
+async function nextTicketCode(tx = prisma) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const code = generateTicketCode();
+    const existing = await tx.support_tickets.findUnique({
+      where: { code },
+      select: { id: true },
+    });
+    if (!existing) {
+      return code;
+    }
+  }
+  return `SUP-${Date.now().toString(36).toUpperCase()}`;
+}
+
 function ticketDto(ticket) {
   return {
     id: ticket.id,
     siteId: ticket.site_id,
     chatId: ticket.chat_id,
+    code: ticket.code,
     status: ticket.status,
     preview: ticket.preview,
     openedAt: ticket.opened_at,
     createdAt: ticket.created_at,
+    updatedAt: ticket.updated_at,
   };
 }
 
@@ -106,7 +138,10 @@ export class SupportService {
       where: { site_id: site.id, is_deleted: false },
     });
     if (!row) {
-      return { error: "Campus not found", status: 404 };
+      return {
+        error: "Start the WhatsApp session first, then load the QR code.",
+        status: 404,
+      };
     }
     return WahaService.getQr(row.session_name);
   }
@@ -137,7 +172,7 @@ export class SupportService {
     const messageData = {
       direction: "INBOUND",
       body: text,
-      waha_message_id: payload.id || null,
+      waha_message_id: wahaMessageId(payload.id),
     };
 
     try {
@@ -153,12 +188,18 @@ export class SupportService {
           await tx.support_messages.create({
             data: { ticket_id: existing.id, ...messageData },
           });
+          await tx.support_tickets.update({
+            where: { id: existing.id },
+            data: { preview },
+          });
           return;
         }
+        const code = await nextTicketCode(tx);
         await tx.support_tickets.create({
           data: {
             site_id: link.site_id,
             chat_id: chatId,
+            code,
             status: "OPEN",
             preview,
             messages: { create: messageData },
@@ -204,7 +245,7 @@ export class SupportService {
 
     const tickets = await prisma.support_tickets.findMany({
       where: { ...scope, ...(status ? { status } : {}) },
-      orderBy: { created_at: "desc" },
+      orderBy: { updated_at: "desc" },
     });
     return { data: tickets.map(ticketDto) };
   }
@@ -301,7 +342,7 @@ export class SupportService {
         ticket_id: ticket.id,
         direction: "OUTBOUND",
         body: trimmed,
-        waha_message_id: sent.data?.id || null,
+        waha_message_id: wahaMessageId(sent.data?.id ?? sent.data?.key?.id),
       },
     });
     return { data: messageDto(message) };

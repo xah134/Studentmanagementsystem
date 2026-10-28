@@ -5,12 +5,30 @@ function queryValue(value) {
 }
 
 export class StudentController {
+  static async enrollmentOverview(req, res) {
+    try {
+      const result = await StudentService.enrollmentOverview({
+        institutionId: queryValue(req.query.institutionId),
+      });
+      if (result.error) {
+        return res.status(result.status || 400).json({ message: result.error });
+      }
+      return res.status(200).json({
+        message: 'Student enrollment overview',
+        data: result.data,
+      });
+    } catch (err) {
+      return res.status(500).json({ message: err.message || 'Internal server error' });
+    }
+  }
+
   static async list(req, res) {
     try {
       const page = req.query.page !== undefined ? req.query.page : 1;
       const pageSize = req.query.pageSize !== undefined ? req.query.pageSize : 10;
       const result = await StudentService.list({
         institutionId: queryValue(req.query.institutionId),
+        siteId: queryValue(req.query.siteId),
         page: queryValue(page),
         pageSize: queryValue(pageSize),
       });

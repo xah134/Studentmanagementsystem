@@ -307,7 +307,8 @@ function OverviewCanvas({ campuses }: { campuses: PlottedCampus[] }) {
           element.addEventListener(
             "click",
             () => {
-              routerRef.current.push(`/portal/campuses/${campus.id}`)
+              sessionStorage.setItem("portal.siteId", campus.id)
+              routerRef.current.push("/campus")
             },
             true
           )

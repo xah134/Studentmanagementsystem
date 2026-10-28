@@ -124,6 +124,7 @@ function InstitutionForm({
   const [form, setForm] = React.useState<FormState>(() =>
     formFromInstitution(institution)
   )
+  const [logoFile, setLogoFile] = React.useState<File | null>(null)
   const [tab, setTab] = React.useState<TabValue>("details")
   const [pending, setPending] = React.useState(false)
 
@@ -146,22 +147,23 @@ function InstitutionForm({
     setPending(true)
 
     try {
+      const body = new FormData()
+      body.set("name", form.name.trim())
+      body.set("email", form.email.trim())
+      body.set("institutionType", form.institutionType)
+      body.set("phone", form.phone.trim())
+      body.set("city", form.city.trim())
+      body.set("country", form.country.trim())
+      body.set("website", form.website.trim())
+      if (logoFile) body.set("logo", logoFile)
+
       const response = await fetch(
         isEdit
           ? `${apiUrl()}/institutions/${institution.id}`
           : `${apiUrl()}/institutions`,
         {
           method: isEdit ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: form.name.trim(),
-            email: form.email.trim(),
-            institutionType: form.institutionType,
-            phone: form.phone.trim(),
-            city: form.city.trim(),
-            country: form.country.trim(),
-            website: form.website.trim(),
-          }),
+          body,
         }
       )
       const payload = await response.json().catch(() => ({}))
@@ -173,6 +175,9 @@ function InstitutionForm({
         return
       }
 
+      if (payload.logoError) {
+        toast.error(payload.logoError)
+      }
       toast.success(isEdit ? "Institution updated" : "Institution created")
       onSaved()
     } catch (error) {
@@ -246,6 +251,22 @@ function InstitutionForm({
                       )
                     )}
                   </select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="institution-logo">Logo</FieldLabel>
+                  <Input
+                    id="institution-logo"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                    onChange={(event) =>
+                      setLogoFile(event.target.files?.[0] ?? null)
+                    }
+                  />
+                  {institution?.logo && !logoFile ? (
+                    <p className="text-xs text-muted-foreground">
+                      Current logo is set. Choose a file to replace it.
+                    </p>
+                  ) : null}
                 </Field>
               </FieldGroup>
             </TabsContent>

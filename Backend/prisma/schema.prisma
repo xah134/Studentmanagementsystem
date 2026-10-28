@@ -48,11 +48,16 @@ model institutions {
   created_at       DateTime        @default(now())
   updated_at       DateTime        @default(now()) @updatedAt
 
-  sites     sites[]
-  users     users[]
-  lecturers lecturers[]
-  faculties faculties[]
-  courses   courses[]
+  sites           sites[]
+  users           users[]
+  lecturers       lecturers[]
+  faculties       faculties[]
+  courses         courses[]
+  modules         modules[]
+  academic_years       academic_years[]
+  calendar_events      calendar_events[]
+  timetable_slots      timetable_slots[]
+  student_enrollments  student_enrollments[]
 
   @@map("institutions")
 }
@@ -80,6 +85,8 @@ model sites {
   courses         courses[]
   site_whatsapp   site_whatsapp?
   support_tickets support_tickets[]
+  calendar_events calendar_events[]
+  timetable_slots timetable_slots[]
 
   @@unique([institution_id, name])
   @@map("sites")
@@ -117,16 +124,41 @@ model courses {
   faculty_id     String
   site_id        String?
 
-  institution institutions @relation(fields: [institution_id], references: [id])
-  faculty     faculties    @relation(fields: [faculty_id], references: [id])
-  site        sites?       @relation(fields: [site_id], references: [id])
+  institution     institutions      @relation(fields: [institution_id], references: [id])
+  faculty         faculties         @relation(fields: [faculty_id], references: [id])
+  site            sites?            @relation(fields: [site_id], references: [id])
+  modules             modules[]
+  timetable_slots     timetable_slots[]
+  student_enrollments student_enrollments[]
 
   @@unique([institution_id, name])
   @@map("courses")
 }
 
+model modules {
+  id             String   @id @default(uuid())
+  name           String
+  code           String?
+  description    String?
+  credits        Int?
+  is_deleted     Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+  institution_id String
+  course_id      String
+
+  institution     institutions      @relation(fields: [institution_id], references: [id])
+  course          courses           @relation(fields: [course_id], references: [id])
+  timetable_slots timetable_slots[]
+
+  @@unique([course_id, name])
+  @@map("modules")
+}
+
 model students {
   id                  String             @id @default(uuid())
+  first_name          String?
+  last_name           String?
   phone               String?
   address             String?
   city                String?
@@ -146,16 +178,20 @@ model students {
   updated_at          DateTime           @default(now()) @updatedAt
   user_id             String?             @unique
 
-  site              sites               @relation(fields: [site_id], references: [id])
-  user              users?               @relation(fields: [user_id], references: [id])
-  student_documents student_documents[]
-  guardians         guardians[]
+  site                sites                 @relation(fields: [site_id], references: [id])
+  user                users?                @relation(fields: [user_id], references: [id])
+  student_documents   student_documents[]
+  guardians           guardians[]
+  student_enrollments student_enrollments[]
+  attendance_records  attendance_records[]
 
   @@map("students")
 }
 
 model lecturers {
   id                  String             @id @default(uuid())
+  first_name          String?
+  last_name           String?
   phone               String?
   foreign_national    Boolean            @default(false)
   passport_number     String?
@@ -293,6 +329,132 @@ enum SupportMessageDirection {
   OUTBOUND
 }
 
+enum CalendarEventType {
+  EXAM
+  BREAK
+  HOLIDAY
+  SPECIAL
+  OTHER
+}
+
+model academic_years {
+  id             String   @id @default(uuid())
+  institution_id String
+  name           String
+  starts_on      DateTime @db.Date
+  ends_on        DateTime @db.Date
+  is_deleted     Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+
+  institution         institutions          @relation(fields: [institution_id], references: [id])
+  calendar_events     calendar_events[]
+  student_enrollments student_enrollments[]
+
+  @@unique([institution_id, name])
+  @@map("academic_years")
+}
+
+model calendar_events {
+  id               String            @id @default(uuid())
+  institution_id   String
+  academic_year_id String
+  site_id          String?
+  title            String
+  description      String?
+  event_type       CalendarEventType @default(OTHER)
+  starts_at        DateTime
+  ends_at          DateTime
+  all_day          Boolean           @default(true)
+  color            String?
+  emoji            String?
+  image_url        String?
+  is_deleted       Boolean           @default(false)
+  created_at       DateTime          @default(now())
+  updated_at       DateTime          @default(now()) @updatedAt
+
+  institution   institutions   @relation(fields: [institution_id], references: [id])
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  site          sites?         @relation(fields: [site_id], references: [id])
+
+  @@index([institution_id, academic_year_id])
+  @@index([site_id])
+  @@map("calendar_events")
+}
+
+model timetable_slots {
+  id             String   @id @default(uuid())
+  institution_id String
+  course_id      String
+  module_id      String
+  site_id        String?
+  day_of_week    Int
+  starts_at      String
+  ends_at        String
+  title          String?
+  location       String?
+  color          String?
+  emoji          String?
+  image_url      String?
+  is_deleted     Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @default(now()) @updatedAt
+
+  institution        institutions         @relation(fields: [institution_id], references: [id])
+  course             courses              @relation(fields: [course_id], references: [id])
+  module             modules              @relation(fields: [module_id], references: [id])
+  site               sites?               @relation(fields: [site_id], references: [id])
+  attendance_records attendance_records[]
+
+  @@index([course_id])
+  @@index([module_id])
+  @@map("timetable_slots")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}
+
+model student_enrollments {
+  id               String   @id @default(uuid())
+  student_id       String
+  course_id        String
+  academic_year_id String
+  institution_id   String
+  is_deleted       Boolean  @default(false)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @default(now()) @updatedAt
+
+  student       students       @relation(fields: [student_id], references: [id])
+  course        courses        @relation(fields: [course_id], references: [id])
+  academic_year academic_years @relation(fields: [academic_year_id], references: [id])
+  institution   institutions   @relation(fields: [institution_id], references: [id])
+
+  @@unique([student_id, course_id, academic_year_id])
+  @@index([course_id, academic_year_id])
+  @@index([institution_id])
+  @@map("student_enrollments")
+}
+
+model attendance_records {
+  id                String           @id @default(uuid())
+  student_id        String
+  timetable_slot_id String
+  attendance_date   DateTime         @db.Date
+  status            AttendanceStatus
+  is_deleted        Boolean          @default(false)
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @default(now()) @updatedAt
+
+  student        students        @relation(fields: [student_id], references: [id])
+  timetable_slot timetable_slots @relation(fields: [timetable_slot_id], references: [id])
+
+  @@unique([student_id, timetable_slot_id, attendance_date])
+  @@index([timetable_slot_id, attendance_date])
+  @@map("attendance_records")
+}
+
 model site_whatsapp {
   id           String   @id @default(uuid())
   site_id      String   @unique
@@ -310,6 +472,7 @@ model support_tickets {
   id         String              @id @default(uuid())
   site_id    String
   chat_id    String
+  code       String              @unique
   status     SupportTicketStatus @default(OPEN)
   preview    String?
   opened_at  DateTime?

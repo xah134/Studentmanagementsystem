@@ -12,6 +12,7 @@ export class CourseController {
       const result = await CourseService.list({
         institutionId: queryValue(req.query.institutionId),
         facultyId: queryValue(req.query.facultyId),
+        siteId: queryValue(req.query.siteId),
         page: queryValue(page),
         pageSize: queryValue(pageSize),
       });

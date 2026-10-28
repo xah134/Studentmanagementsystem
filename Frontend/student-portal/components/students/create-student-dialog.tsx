@@ -22,7 +22,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/Tabs/tabs"
+import { fetchAcademicYears, type AcademicYear } from "@/components/calendar/calendar-api"
 import { fetchCampuses, type Campus } from "@/components/campuses/campuses"
+import { fetchCourses, type Course } from "@/components/courses/courses"
+import { fetchFaculties, type Faculty } from "@/components/faculties/faculties"
 
 import {
   createStudent,
@@ -52,6 +55,8 @@ type FormState = Omit<StudentInput, "institutionId" | "guardians"> & {
 
 const emptyForm: FormState = {
   siteId: "",
+  firstName: "",
+  lastName: "",
   phone: "",
   gender: "",
   dateOfBirth: "",
@@ -65,6 +70,9 @@ const emptyForm: FormState = {
   state: "",
   zip: "",
   country: "",
+  facultyId: "",
+  courseId: "",
+  academicYearId: "",
   guardians: [],
 }
 
@@ -87,6 +95,8 @@ function emptyGuardian(): GuardianRow {
 function formFromStudent(student: StudentDetail): FormState {
   return {
     siteId: student.siteId,
+    firstName: student.firstName ?? "",
+    lastName: student.lastName ?? "",
     phone: student.phone ?? "",
     gender: student.gender ?? "",
     dateOfBirth: student.dateOfBirth ?? "",
@@ -100,6 +110,9 @@ function formFromStudent(student: StudentDetail): FormState {
     state: student.state ?? "",
     zip: student.zip ?? "",
     country: student.country ?? "",
+    facultyId: "",
+    courseId: "",
+    academicYearId: "",
     guardians: student.guardians.map((guardian) => ({
       key: nextGuardianKey(),
       name: guardian.name,
@@ -128,6 +141,9 @@ export function CreateStudentDialog({
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false)
   const [form, setForm] = React.useState<FormState>(emptyForm)
   const [campuses, setCampuses] = React.useState<Campus[]>([])
+  const [faculties, setFaculties] = React.useState<Faculty[]>([])
+  const [courses, setCourses] = React.useState<Course[]>([])
+  const [years, setYears] = React.useState<AcademicYear[]>([])
   const [pending, setPending] = React.useState(false)
   const isControlled = open !== undefined
   const dialogOpen = isControlled ? open : uncontrolledOpen
@@ -147,18 +163,39 @@ export function CreateStudentDialog({
     if (!dialogOpen) return
     const controller = new AbortController()
 
-    fetchCampuses(institutionId, controller.signal)
-      .then(setCampuses)
+    Promise.all([
+      fetchCampuses(institutionId, controller.signal),
+      fetchFaculties(institutionId, controller.signal),
+      fetchCourses(institutionId, controller.signal),
+      fetchAcademicYears(institutionId, controller.signal),
+    ])
+      .then(([campusRows, facultyRows, courseRows, yearRows]) => {
+        setCampuses(campusRows)
+        setFaculties(facultyRows)
+        setCourses(courseRows)
+        setYears(yearRows)
+      })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
         setCampuses([])
+        setFaculties([])
+        setCourses([])
+        setYears([])
         toast.error(
-          error instanceof Error ? error.message : "Failed to load campuses"
+          error instanceof Error ? error.message : "Failed to load form options"
         )
       })
 
     return () => controller.abort()
   }, [dialogOpen, institutionId])
+
+  const coursesForFaculty = courses.filter((course) => {
+    if (form.facultyId && course.facultyId !== form.facultyId) return false
+    if (form.siteId && course.campusId && course.campusId !== form.siteId) {
+      return false
+    }
+    return true
+  })
 
   function update<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -194,9 +231,19 @@ export function CreateStudentDialog({
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
+    if (!form.firstName.trim() || !form.lastName.trim()) {
+      toast.error("First and last name are required")
+      return
+    }
     if (!form.siteId) {
       toast.error("Campus is required")
       return
+    }
+    if (!editing) {
+      if (!form.facultyId || !form.courseId || !form.academicYearId) {
+        toast.error("Department, course, and academic year are required")
+        return
+      }
     }
     for (const guardian of form.guardians) {
       if (!guardian.name.trim()) {
@@ -212,6 +259,8 @@ export function CreateStudentDialog({
     const input: StudentInput = {
       institutionId,
       siteId: form.siteId,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
       phone: form.phone.trim(),
       gender: form.gender,
       dateOfBirth: form.dateOfBirth,
@@ -225,6 +274,13 @@ export function CreateStudentDialog({
       state: form.state.trim(),
       zip: form.zip.trim(),
       country: form.country.trim(),
+      ...(editing
+        ? {}
+        : {
+            facultyId: form.facultyId,
+            courseId: form.courseId,
+            academicYearId: form.academicYearId,
+          }),
       guardians: form.guardians.map((guardian) => ({
         name: guardian.name.trim(),
         relationship: guardian.relationship.trim(),
@@ -267,7 +323,7 @@ export function CreateStudentDialog({
           <DialogDescription>
             {editing
               ? "Update this student's profile and guardians."
-              : "Add a student to a campus of this institution."}
+              : "Add a student with campus, department, course, and year."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit}>
@@ -276,11 +332,41 @@ export function CreateStudentDialog({
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="identity">Identity</TabsTrigger>
               <TabsTrigger value="address">Address</TabsTrigger>
-              <TabsTrigger value="campus">Campus</TabsTrigger>
+              <TabsTrigger value="campus">
+                {editing ? "Campus" : "Enrollment"}
+              </TabsTrigger>
               <TabsTrigger value="guardians">Guardians</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
               <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor={`${fieldId}-firstName`}>
+                    First name
+                  </FieldLabel>
+                  <Input
+                    id={`${fieldId}-firstName`}
+                    placeholder="Amahle"
+                    value={form.firstName}
+                    onChange={(event) =>
+                      update("firstName", event.target.value)
+                    }
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor={`${fieldId}-lastName`}>
+                    Last name
+                  </FieldLabel>
+                  <Input
+                    id={`${fieldId}-lastName`}
+                    placeholder="Nkosi"
+                    value={form.lastName}
+                    onChange={(event) =>
+                      update("lastName", event.target.value)
+                    }
+                    required
+                  />
+                </Field>
                 <Field>
                   <FieldLabel htmlFor={`${fieldId}-phone`}>Phone</FieldLabel>
                   <Input
@@ -467,7 +553,11 @@ export function CreateStudentDialog({
                     id={`${fieldId}-campus`}
                     className={selectClassName}
                     value={form.siteId}
-                    onChange={(event) => update("siteId", event.target.value)}
+                    onChange={(event) => {
+                      update("siteId", event.target.value)
+                      update("courseId", "")
+                    }}
+                    required
                   >
                     <option value="">Select a campus</option>
                     {campuses.map((campus) => (
@@ -477,6 +567,74 @@ export function CreateStudentDialog({
                     ))}
                   </select>
                 </Field>
+                {!editing ? (
+                  <>
+                    <Field>
+                      <FieldLabel htmlFor={`${fieldId}-faculty`}>
+                        Department
+                      </FieldLabel>
+                      <select
+                        id={`${fieldId}-faculty`}
+                        className={selectClassName}
+                        value={form.facultyId}
+                        onChange={(event) => {
+                          update("facultyId", event.target.value)
+                          update("courseId", "")
+                        }}
+                        required
+                      >
+                        <option value="">Select a department</option>
+                        {faculties.map((faculty) => (
+                          <option key={faculty.id} value={faculty.id}>
+                            {faculty.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor={`${fieldId}-course`}>
+                        Course
+                      </FieldLabel>
+                      <select
+                        id={`${fieldId}-course`}
+                        className={selectClassName}
+                        value={form.courseId}
+                        onChange={(event) =>
+                          update("courseId", event.target.value)
+                        }
+                        required
+                      >
+                        <option value="">Select a course</option>
+                        {coursesForFaculty.map((course) => (
+                          <option key={course.id} value={course.id}>
+                            {course.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor={`${fieldId}-year`}>
+                        Academic year
+                      </FieldLabel>
+                      <select
+                        id={`${fieldId}-year`}
+                        className={selectClassName}
+                        value={form.academicYearId}
+                        onChange={(event) =>
+                          update("academicYearId", event.target.value)
+                        }
+                        required
+                      >
+                        <option value="">Select year</option>
+                        {years.map((year) => (
+                          <option key={year.id} value={year.id}>
+                            {year.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </>
+                ) : null}
               </FieldGroup>
             </TabsContent>
             <TabsContent value="guardians">

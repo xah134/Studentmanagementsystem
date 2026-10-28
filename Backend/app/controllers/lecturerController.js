@@ -11,6 +11,7 @@ export class LecturerController {
       const pageSize = req.query.pageSize !== undefined ? req.query.pageSize : 10;
       const result = await LecturerService.list({
         institutionId: queryValue(req.query.institutionId),
+        siteId: queryValue(req.query.siteId),
         page: queryValue(page),
         pageSize: queryValue(pageSize),
       });

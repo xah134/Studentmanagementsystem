@@ -24,6 +24,8 @@ function toDateOnly(date) {
 
 const detailSelect = {
   id: true,
+  first_name: true,
+  last_name: true,
   phone: true,
   foreign_national: true,
   passport_number: true,
@@ -47,6 +49,8 @@ const detailSelect = {
 function toListItem(lecturer) {
   return {
     id: lecturer.id,
+    firstName: lecturer.first_name,
+    lastName: lecturer.last_name,
     phone: lecturer.phone,
     nationality: lecturer.nationality,
     idNumber: lecturer.id_number,
@@ -61,6 +65,8 @@ function toListItem(lecturer) {
 function toDetail(lecturer) {
   return {
     id: lecturer.id,
+    firstName: lecturer.first_name,
+    lastName: lecturer.last_name,
     phone: lecturer.phone,
     foreignNational: lecturer.foreign_national,
     passportNumber: lecturer.passport_number,
@@ -141,6 +147,8 @@ function parseBody(body) {
     value: {
       institutionId,
       siteId,
+      firstName: textField(body, 'firstName'),
+      lastName: textField(body, 'lastName'),
       phone: textField(body, 'phone'),
       passportNumber: textField(body, 'passportNumber'),
       idNumber: textField(body, 'idNumber'),
@@ -214,10 +222,11 @@ async function checkSite(siteId, institutionId) {
 }
 
 export class LecturerService {
-  static async list({ institutionId, page = 1, pageSize = 10 }) {
+  static async list({ institutionId, siteId, page = 1, pageSize = 10 }) {
     const pageNum = parseInt(page, 10);
     const sizeNum = parseInt(pageSize, 10);
     const id = requiredText(institutionId);
+    const campusFilter = requiredText(siteId);
 
     if (!id) {
       return { error: 'Institution is required', status: 400 };
@@ -232,8 +241,16 @@ export class LecturerService {
     const institution = await findOpenInstitution(id);
     if (institution.error) return institution;
 
+    let campusId;
+    if (campusFilter) {
+      const site = await checkSite(campusFilter, institution.id);
+      if (site.error) return site;
+      campusId = site.id;
+    }
+
     try {
       const where = { is_deleted: false, institution_id: institution.id };
+      if (campusId) where.site_id = campusId;
       const [lecturers, totalCount] = await Promise.all([
         prisma.lecturers.findMany({
           where,
@@ -242,6 +259,8 @@ export class LecturerService {
           take: sizeNum,
           select: {
             id: true,
+            first_name: true,
+            last_name: true,
             phone: true,
             nationality: true,
             id_number: true,
@@ -296,6 +315,12 @@ export class LecturerService {
     if (parsed.error) return parsed;
     const v = parsed.value;
 
+    const firstName = requiredText(v.firstName);
+    const lastName = requiredText(v.lastName);
+    if (!firstName || !lastName) {
+      return { error: 'First name and last name are required', status: 400 };
+    }
+
     const institution = await findOpenInstitution(v.institutionId);
     if (institution.error) return institution;
 
@@ -311,6 +336,8 @@ export class LecturerService {
         data: {
           institution_id: institution.id,
           site_id: siteId,
+          first_name: firstName,
+          last_name: lastName,
           phone: v.phone ?? null,
           passport_number: v.passportNumber ?? null,
           id_number: v.idNumber ?? null,
@@ -364,6 +391,8 @@ export class LecturerService {
         where: { id: found.lecturer.id },
         data: {
           site_id: siteId,
+          first_name: v.firstName,
+          last_name: v.lastName,
           phone: v.phone,
           passport_number: v.passportNumber,
           id_number: v.idNumber,

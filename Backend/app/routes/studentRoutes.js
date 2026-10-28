@@ -4,6 +4,7 @@ import { StudentController } from '../controllers/studentController.js';
 const router = Router();
 
 router.get('/', StudentController.list);
+router.get('/stats/enrollment', StudentController.enrollmentOverview);
 router.get('/:id', StudentController.getById);
 router.post('/', StudentController.create);
 router.patch('/:id', StudentController.update);

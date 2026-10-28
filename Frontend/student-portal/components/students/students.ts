@@ -13,6 +13,8 @@ export type Guardian = {
 
 export type Student = {
   id: string
+  firstName: string | null
+  lastName: string | null
   phone: string | null
   nationality: string | null
   idNumber: string | null
@@ -25,6 +27,8 @@ export type Student = {
 
 export type StudentDetail = {
   id: string
+  firstName: string | null
+  lastName: string | null
   phone: string | null
   foreignNational: boolean
   passportNumber: string | null
@@ -55,6 +59,8 @@ export type GuardianInput = {
 export type StudentInput = {
   institutionId: string
   siteId: string
+  firstName: string
+  lastName: string
   phone: string
   gender: Gender | ""
   dateOfBirth: string
@@ -68,6 +74,9 @@ export type StudentInput = {
   state: string
   zip: string
   country: string
+  facultyId?: string
+  courseId?: string
+  academicYearId?: string
   guardians: GuardianInput[]
 }
 
@@ -84,13 +93,15 @@ export const genderLabels: Record<Gender, string> = {
 
 export async function fetchStudents(
   institutionId: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  siteId?: string
 ): Promise<Student[]> {
   const params = new URLSearchParams({
     institutionId,
     page: "1",
     pageSize: "50",
   })
+  if (siteId) params.set("siteId", siteId)
   const response = await fetch(`${apiUrl()}/students?${params}`, {
     cache: "no-store",
     signal,
